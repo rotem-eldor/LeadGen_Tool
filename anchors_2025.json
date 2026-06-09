@@ -1,0 +1,320 @@
+{
+  "meta": {
+    "description": "Calibration anchors — known 2025 actuals used to validate profit model",
+    "last_updated": "2026-06-09",
+    "model_accuracy": {
+      "IAA": {
+        "median_abs_err_pct": 74,
+        "note": "High variance — treat all IAA predictions as rough estimates"
+      },
+      "Blend": {
+        "median_abs_err_pct": 33,
+        "note": "Reasonable for screening"
+      },
+      "IAP_High": {
+        "median_abs_err_pct": 30,
+        "note": "Reasonable for screening"
+      }
+    },
+    "constants": {
+      "iaa_rate_per_dl": 0.1,
+      "iaa_margin": 0.5,
+      "blend_rev_coeff": 0.65,
+      "blend_iaa_coeff": 0.35,
+      "iap_high_margin": 0.42,
+      "iap_high_threshold_mo": 1000000
+    }
+  },
+  "anchors": [
+    {
+      "name": "Lamar - Idle Vlogger",
+      "publisher": "CrazyLabs",
+      "model_type": "IAA",
+      "downloads_mo": 4196963,
+      "revenue_mo": 127205.46,
+      "actual_profit_mo": 400000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Fruit Merge™: Match Game",
+      "publisher": "Bravestars",
+      "model_type": "IAA",
+      "downloads_mo": 3329245,
+      "revenue_mo": 215320.65,
+      "actual_profit_mo": 280000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Phone Case DIY",
+      "publisher": "CrazyLabs",
+      "model_type": "IAA",
+      "downloads_mo": 2709815,
+      "revenue_mo": 2592.6,
+      "actual_profit_mo": 130000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Zombie Apocalypse: Doomsday-Z",
+      "publisher": "Freeplay",
+      "model_type": "IAA",
+      "downloads_mo": 2373021,
+      "revenue_mo": 169781.58,
+      "actual_profit_mo": 45000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Royal Cooking - Cooking Game",
+      "publisher": "Matryoshka",
+      "model_type": "Blend",
+      "downloads_mo": 2222082,
+      "revenue_mo": 573227.16,
+      "actual_profit_mo": 275000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "AMAZE!",
+      "publisher": "CrazyLabs",
+      "model_type": "IAA",
+      "downloads_mo": 2125763,
+      "revenue_mo": 704.18,
+      "actual_profit_mo": 300000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Merge Fashion: Romance Story",
+      "publisher": "Infiniplay-Game",
+      "model_type": "Blend",
+      "downloads_mo": 1785521,
+      "revenue_mo": 238579.65,
+      "actual_profit_mo": 175000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Eye Color Mix",
+      "publisher": "CrazyLabs",
+      "model_type": "IAA",
+      "downloads_mo": 1565812,
+      "revenue_mo": 756.18,
+      "actual_profit_mo": 65000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Kitty Sort: Twisted Tails",
+      "publisher": "Smart Project",
+      "model_type": "IAA",
+      "downloads_mo": 1546904,
+      "revenue_mo": 31930.38,
+      "actual_profit_mo": 550000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Idle Guy: Life Simulator games",
+      "publisher": "Heatherglade",
+      "model_type": "Blend",
+      "downloads_mo": 1494199,
+      "revenue_mo": 169771.74,
+      "actual_profit_mo": 330000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Dessert DIY",
+      "publisher": "CrazyLabs",
+      "model_type": "IAA",
+      "downloads_mo": 1405807,
+      "revenue_mo": 115.64,
+      "actual_profit_mo": 42000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Sculpt People",
+      "publisher": "CrazyLabs",
+      "model_type": "IAA",
+      "downloads_mo": 1288629,
+      "revenue_mo": 0.0,
+      "actual_profit_mo": 40000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Business Empire: RichMan",
+      "publisher": "NewPubCo",
+      "model_type": "IAA",
+      "downloads_mo": 1204126,
+      "revenue_mo": 105688.51,
+      "actual_profit_mo": 470000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "QuizzLand. Quiz & Trivia game",
+      "publisher": "Mno Go Apps",
+      "model_type": "IAA",
+      "downloads_mo": 1057425,
+      "revenue_mo": 24407.42,
+      "actual_profit_mo": 270000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "My Cat – Virtual Pet Games",
+      "publisher": "AppsYouLove",
+      "model_type": "Blend",
+      "downloads_mo": 981703,
+      "revenue_mo": 392752.91,
+      "actual_profit_mo": 200000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Coffee Mania - Sorting Jam",
+      "publisher": "CrazyLabs",
+      "model_type": "Blend",
+      "downloads_mo": 806113,
+      "revenue_mo": 358278.79,
+      "actual_profit_mo": 270000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Idle Weapon Shop",
+      "publisher": "Hello Games",
+      "model_type": "Blend",
+      "downloads_mo": 772911,
+      "revenue_mo": 655291.55,
+      "actual_profit_mo": 240000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "IQ & brain test: Triviascapes",
+      "publisher": "Mno Go Apps",
+      "model_type": "IAA",
+      "downloads_mo": 684108,
+      "revenue_mo": 22587.05,
+      "actual_profit_mo": 170000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Zombie Waves",
+      "publisher": "Fun Formula",
+      "model_type": "IAP High",
+      "downloads_mo": 508368,
+      "revenue_mo": 3192595.04,
+      "actual_profit_mo": 500000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Raid Rush: Tower Defense TD",
+      "publisher": "Panteon",
+      "model_type": "IAP High",
+      "downloads_mo": 461592,
+      "revenue_mo": 1976911.51,
+      "actual_profit_mo": 650000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "SuitU: Fashion Avatar Dress UP",
+      "publisher": "Libii",
+      "model_type": "IAP High",
+      "downloads_mo": 371128,
+      "revenue_mo": 1330066.76,
+      "actual_profit_mo": 820000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "LUDUS・Strategy PvP Battle Game",
+      "publisher": "Top App Games",
+      "model_type": "IAP High",
+      "downloads_mo": 355399,
+      "revenue_mo": 1113948.6,
+      "actual_profit_mo": 660000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Idle Nightclub Tycoon: Empire",
+      "publisher": "Iteration One",
+      "model_type": "Blend",
+      "downloads_mo": 321251,
+      "revenue_mo": 120044.0,
+      "actual_profit_mo": 43000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Venue - Relaxing Design Games",
+      "publisher": "Superbloom",
+      "model_type": "Blend",
+      "downloads_mo": 238421,
+      "revenue_mo": 221181.22,
+      "actual_profit_mo": 220000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Heroes vs Hordes: Survival RPG",
+      "publisher": "SWIFT GAMES",
+      "model_type": "Blend",
+      "downloads_mo": 202318,
+      "revenue_mo": 661446.19,
+      "actual_profit_mo": 150000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Obsidian Knight — RPG Games",
+      "publisher": "ActFirst Games",
+      "model_type": "Blend",
+      "downloads_mo": 172588,
+      "revenue_mo": 98025.53,
+      "actual_profit_mo": 100000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Zombastic: Survival game",
+      "publisher": "Playmotional",
+      "model_type": "Blend",
+      "downloads_mo": 134510,
+      "revenue_mo": 34694.08,
+      "actual_profit_mo": 80000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "Tower Battle: Connect Towers",
+      "publisher": "Viva Games Studios",
+      "model_type": "Blend",
+      "downloads_mo": 127016,
+      "revenue_mo": 22555.74,
+      "actual_profit_mo": 50000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    },
+    {
+      "name": "DIY Makeup",
+      "publisher": "TabTale",
+      "model_type": "IAA",
+      "downloads_mo": 61510,
+      "revenue_mo": 0.0,
+      "actual_profit_mo": 1000,
+      "source_year": 2025,
+      "source_period": "Jan 1 - Dec 31 2025 (annual / 12)"
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+DROPPED (in old output, removed from new)
+"Game","Old $K","New $K","Reason"
+'Ludo King',136,681,pushed above 150K
+'Block Crazy Robo World Craft',104,521,pushed above 150K
+'Magic Tiles 3 - Piano Game',96,480,pushed above 150K
+'Super Bear Adventure',81,407,pushed above 150K
+'Granny',69,345,pushed above 150K
+'Temple Run 2: Endless Escape',64,320,pushed above 150K
+'Traffic Rider',63,317,pushed above 150K
+'Dr. Driving',63,315,pushed above 150K
+'Extreme Car Driving Simulator',62,310,pushed above 150K
+'2 3 4 Player Mini Games',61,304,pushed above 150K
+
+ADDED (new to output)
+"Game","Old $K","New $K"
+'Agent Shooter - Shooting Game',30,149
+'Chess - Offline Board Game',30,148
+'Rope Hero: Vice Town',29,147
+'Piano Kids - Music & Songs',29,146
+'Craft Explore: Block Builder',29,144
+'Flight Simulator Airplane Game',29,144
+'Mini Challenges: Calm Games',29,144
+'Solar Smash',28,140
+'Bowmasters - Multiplayer Games',27,137
+'Truckers of Europe 2',27,136
+'Coloring Page ASMR Drawing',26,132
+'Soccer Referee Simulator 3D',26,132
+'Truckers of Europe 3',26,131
+'Tiles Hop Music & Ball Game',26,130
+'Ice Runner Battle: Snow Race',24,119
+'Pooking - Billiards City',24,118
+'Trading Arena-Crypto Simulator',24,118
+'2 Player Games Offline - 1234',23,117
+'Crostic Crossword－Word Puzzles',23,116
+'Granny: Chapter Two',23,115
+'Truck Masters: India Simulator',23,114
+'Indian Vehicles Simulator 3d',23,114
+'Ocean Domination - Fish.IO',22,112
+'Tile Home-Match Puzzle Games',22,110
+'Treasure Collector',22,110
+'Kitchen Set Cooking Chef Time',22,110
+'Red Ball 4',22,109
+'Crafting and Building',22,109
+'FRAG Pro Shooter',22,108
+'Bus Simulator India',21,106
+'Cake Maker: Kids Cooking Games',21,106
+'Go Convenience store Ready',21,105
+'Sheep Dash: Sheep Away',21,105
+'Find Hidden Objects - Spot It!',21,105
+'Geometry Dash SubZero',21,103
+'Archer Assassin Shooting Game',21,103
+'Zombie Tsunami',20,102
+'Block Craft 3D: Realm Builder',20,102
+'Mia World - Makeover Life',20,100
+'Indian Theft Aura Simulator',20,100
+'Traffic Racer',20,99
+'Golden Card Pact',20,98
+'Home Pin 4: Pull the Pin',20,98
+'Magic Dancing Tiles',19,97
+'I Am Taxi Driver',19,96
+'YoYa Sparkle: Style Pop',19,95
+'Snake Escape',19,95
+'Haunted Dorm',19,95
+'Skincare ASMR: Relaxing Games',19,94
+'Motorcycle Real Simulator',19,93
+'Magic Level 9 Music Piano Game',18,92
+'Rainbow Piano: EDM Music Game',18,91
+'Cake Maker DIY: Baking Games',18,89
+'Car Driving: Drag Racing 3D',18,89
+'Aircraft Strike: Jet Fighter',17,87
+'Fidget Toys Trading・Pop It 3D',17,87
+'Indian Wedding: DressUp Makeup',17,87
+'Mountain Climb: Stunt Car Game',17,86
+'Colorful Screw: Charm Quest',17,85
+'Western Survival Shooting Game',17,84
+'Mini Relaxing – Stress Relief',17,83
+'Relax Mini Games',17,83
+'Draw One Puzzle: Brain Games',16,82
+'Builder Game',16,81
+'slither.io',16,81
+'Left Or Right Perfect Dress Up',16,81
+'Supermarket Game',16,80
+'Car Jam Solver: Traffic Jam',16,78
+'Arrow Cube Escape',16,78
+'Highway Racer Pro',15,76
+'Ninja warrior: legend of adven',15,76
+'US Car Drive Simulator offline',15,75
+'Shape Transform: Shifting Car',15,75
+'RioRise－Jogo Simulador De Vida',15,75
+'Super Goal: Fun Soccer Game',15,74
+'Geometry Dash World',15,74
+'Drive Mad',15,73
+'Brainy Escape Quest',15,73
+'3D Bubble Shoot - ASMR Game',14,72
+'SkinLab FF Skin & Diamond Tips',14,72
+'Spinner Merge: Masters',14,71
+'Cool Lady',14,71
+'Boba Tea Milkshake Drink Joke',14,71
+'Tanghulu Master - Mukbang ASMR',14,70
+'Build a Doll',14,69
+'Geometry Dash Meltdown',14,69
+'Kamla - Horror Exorcism Escape',14,68
+'Ludo Cash - Win Real Rewards',14,68
+'Makeup Beauty - Makeup Game',14,68
+'Indian Wedding Rituals Game',13,67
+'Screw All Out - Jam Master',13,67
+'Find The Thief',13,67
+'Panda Forest Rescue',13,67
+'Moto X3M Bike Race Game',13,66
+'Ludo Buzz - Multiplayer Game',13,66
+'Moto Rider GO: Highway Traffic',13,66
+'Sandbox In Space',13,66
+'Spider Fighter 2',13,65
+'WWE Mayhem',59,65
+'Snow Race 3D™: Fun Racing',13,65
+'Block World - Craft City',13,64
+'Cube Master 3D:Matching Game',60,63
+'Search It - Hidden Objects',13,63
+'Gun Games FPS Shooting Games',13,63
+'Antistress Relax Fidget Games',12,62
+'Mini Dress Up Game',12,62
+'Beat Cats',12,62
+'Money Empire',60,62
+'Merge Restaurant - Makeover',59,62
+'DIY Drink',12,61
+'Dream Road: Online',12,61
+'Everyday Puzzles: Mini Games',53,61
+'Spirit Hunter: Rush',60,61
+'Fancy Screw: Story & Makeover',12,61
+'Aqua Match',59,61
+'Orecraft: Orc Mining Camp',60,61
+'Word Solitaire Now!',53,60
+'Ball Connect Puzzle: Link Dots',12,60
+'Woodle Screw Jam: Nuts & Bolts',12,60

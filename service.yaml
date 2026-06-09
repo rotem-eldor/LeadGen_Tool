@@ -1,0 +1,74 @@
+name: ai-publishing-dashboard
+language: typescript
+port: 3000
+
+clusters:
+  dev:
+    name: deploy-skill-dev
+    region: us-east-1
+  production:
+    name: deploy-skill-prod
+    region: us-east-1
+
+network:
+  profile: external
+  ingress:
+    hostname: ai-publishing-dashboard-dev.ai.ttpsdk.info
+    certificate_arn: arn:aws:acm:us-east-1:717363055235:certificate/6d165412-ab7c-4e6f-bcbd-0bc873fd315a
+    healthcheck_path: /api/health
+    alb:
+      scheme: internet-facing
+      subnets:
+        - subnet-0a0ba16c6a16954b3
+        - subnet-03dadb2f82af544be
+  production:
+    ingress:
+      hostname: ai-publishing-dashboard.ai.ttpsdk.info
+      certificate_arn: arn:aws:acm:us-east-1:717363055235:certificate/6d165412-ab7c-4e6f-bcbd-0bc873fd315a
+      alb:
+        scheme: internet-facing
+        subnets:
+          - subnet-04abd92ea05c2efd5
+          - subnet-0133cd1c5ac6de4f4
+          - subnet-054ee5979ece35aa6
+
+needs:
+  postgres:
+    aws_class: db.t4g.micro
+    version: "16"
+    production:
+      aws_class: db.t4g.micro
+      ha: true
+
+resources:
+  cpu: 200m
+  memory: 256Mi
+  production:
+    cpu: 500m
+    memory: 512Mi
+
+replicas:
+  min: 1
+  max: 3
+  production:
+    min: 2
+    max: 10
+    autoscaling:
+      enabled: true
+      latency_target_ms: 500
+
+env:
+  DATABASE_URL: "${postgres.connection_string}"
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: ""
+  NODE_ENV: "production"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+  PORT: "3000"
+  production:
+    NODE_ENV: "production"
+
+setup:
+  postgres:
+    migrate: "node scripts/migrate.js && node scripts/sqlite-import.js"
+    files:
+      - scripts/migrate.js
+      - scripts/sqlite-import.js
