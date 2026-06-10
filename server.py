@@ -61,9 +61,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path in ("/", "/output.html"):
-            self._serve_file(OUTPUT, "text/html; charset=utf-8")
+            self._serve_html_with_state(OUTPUT)
         elif parsed.path == "/output_preview.html":
-            self._serve_file(OUTPUT.parent / "output_preview.html", "text/html; charset=utf-8")
+            self._serve_html_with_state(OUTPUT.parent / "output_preview.html")
         elif parsed.path == "/games_state.json":
             self._serve_file(STATE_FILE, "application/json; charset=utf-8")
         else:
@@ -74,8 +74,17 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             body   = self.rfile.read(length)
             try:
-                data = json.loads(body)
-                STATE_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+                data = json.loads(body)  # works for both application/json and text/plain
+                # Merge with existing state rather than overwrite,
+                # so http:// saves aren't lost when file:// syncs
+                existing = {}
+                if STATE_FILE.exists():
+                    try:
+                        existing = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+                    except Exception:
+                        pass
+                existing.update(data)
+                STATE_FILE.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
                 self._respond(200, "application/json", b'{"ok":true}')
             except Exception as e:
                 self._respond(500, "application/json",
@@ -141,6 +150,29 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
 
+    def _serve_html_with_state(self, path: Path):
+        """Serve an HTML file with saved state injected so checkmarks restore instantly."""
+        if not path.exists():
+            self._respond(404, "text/plain", b"output.html not found - run pipeline first")
+            return
+        html = path.read_text(encoding="utf-8")
+        # Inject saved state as inline script just before </head>
+        state = {}
+        if STATE_FILE.exists():
+            try:
+                state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        injection = f"<script>window.__SAVED_STATE__ = {json.dumps(state)};</script>\n"
+        html = html.replace("</head>", injection + "</head>", 1)
+        data = html.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(data)
+
     def _serve_file(self, path: Path, mime: str):
         if not path.exists():
             self._respond(404, "text/plain", b"output.html not found - run pipeline first")
@@ -149,6 +181,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(data)))
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(data)
 
@@ -156,8 +189,17 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        # Pre-flight CORS for cross-origin requests (e.g. file:// → http://)
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
 
 
 def main():

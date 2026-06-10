@@ -874,18 +874,24 @@ function filterTab(tabName, query) {
 function saveCheck(cb) {
   localStorage.setItem('glf_check_' + cb.dataset.game, cb.checked ? '1' : '');
   updateReviewedCount();
+  syncToServer();
 }
 function saveNote(inp) {
   localStorage.setItem('glf_note_' + inp.dataset.game, inp.value);
   updateReviewedCount();
+  syncToServer();
 }
 function restoreState() {
+  const saved = window.__SAVED_STATE__ || {};
+  for (const [key, val] of Object.entries(saved)) {
+    if (key.startsWith('glf_')) localStorage.setItem(key, val);
+  }
   document.querySelectorAll('input[type=checkbox][data-game]').forEach(cb => {
-    const v = localStorage.getItem('glf_check_' + cb.dataset.game);
+    const v = saved['glf_check_' + cb.dataset.game] || localStorage.getItem('glf_check_' + cb.dataset.game);
     if (v === '1') cb.checked = true;
   });
   document.querySelectorAll('.notes-input[data-game]').forEach(inp => {
-    const v = localStorage.getItem('glf_note_' + inp.dataset.game);
+    const v = saved['glf_note_' + inp.dataset.game] || localStorage.getItem('glf_note_' + inp.dataset.game);
     if (v) inp.value = v;
   });
   updateReviewedCount();
@@ -1055,7 +1061,47 @@ async function uploadFiles(files) {
   }
 }
 
+// ── Server sync (saves checkmarks+notes to games_state.json for git) ──
+let _syncTimer = null;
+function syncToServer() {
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('glf_check_') || key.startsWith('glf_note_')) {
+        data[key] = localStorage.getItem(key);
+      }
+    }
+    fetch('/save-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).catch(() => {});
+  }, 800);
+}
+
+// ── Auto-sync ──
+function autoSync() {
+  if (location.protocol === 'file:') {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('glf_check_') || key.startsWith('glf_note_')) data[key] = localStorage.getItem(key);
+    }
+    if (Object.keys(data).length > 0) {
+      fetch('http://127.0.0.1:5000/save-state', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(data)
+      }).catch(() => {});
+    }
+  }
+}
+
 // ── Init ──
+autoSync();
 restoreState();
 </script>
 </body>

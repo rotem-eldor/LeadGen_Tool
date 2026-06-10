@@ -791,22 +791,17 @@ function saveNote(inp) {{
   updateReviewedCount();
   syncToServer();
 }}
-async function restoreState() {{
-  try {{
-    const resp = await fetch('/games_state.json');
-    if (resp.ok) {{
-      const data = await resp.json();
-      for (const [key, val] of Object.entries(data)) {{
-        if (key.startsWith('glf_')) localStorage.setItem(key, val);
-      }}
-    }}
-  }} catch(e) {{}}
+function restoreState() {{
+  const saved = window.__SAVED_STATE__ || {{}};
+  for (const [key, val] of Object.entries(saved)) {{
+    if (key.startsWith('glf_')) localStorage.setItem(key, val);
+  }}
   document.querySelectorAll('input[type=checkbox][data-game]').forEach(cb => {{
-    const v = localStorage.getItem('glf_check_' + cb.dataset.game);
+    const v = saved['glf_check_' + cb.dataset.game] || localStorage.getItem('glf_check_' + cb.dataset.game);
     if (v === '1') cb.checked = true;
   }});
   document.querySelectorAll('.notes-input[data-game]').forEach(inp => {{
-    const v = localStorage.getItem('glf_note_' + inp.dataset.game);
+    const v = saved['glf_note_' + inp.dataset.game] || localStorage.getItem('glf_note_' + inp.dataset.game);
     if (v) inp.value = v;
   }});
   updateReviewedCount();
@@ -996,7 +991,27 @@ function syncToServer() {{
   }}, 800);
 }}
 
+// ── Auto-sync ──
+function autoSync() {{
+  if (location.protocol === 'file:') {{
+    const data = {{}};
+    for (let i = 0; i < localStorage.length; i++) {{
+      const key = localStorage.key(i);
+      if (key.startsWith('glf_check_') || key.startsWith('glf_note_')) data[key] = localStorage.getItem(key);
+    }}
+    if (Object.keys(data).length > 0) {{
+      fetch('http://127.0.0.1:5000/save-state', {{
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {{ 'Content-Type': 'text/plain' }},
+        body: JSON.stringify(data)
+      }}).catch(() => {{}});
+    }}
+  }}
+}}
+
 // ── Init ──
+autoSync();
 restoreState();
 </script>
 </body>
