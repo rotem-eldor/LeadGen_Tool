@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Game Lead Finder — $60K–$150K — 2026-06-10</title>
+<style>
+/* ── Reset / Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f7f8fa; --card: #fff; --border: #e2e6ea; --text: #1a1d23;
+  --text2: #6c757d; --accent: #3b5bdb; --accent-h: #2f4ac0;
+  --green: #2f9e44; --red: #e03131; --blue: #1971c2; --purple: #7048e8;
+  --iaa: #fff9e6; --iaa-border: #ffe066;
+  --th-bg: #f1f3f5; --hover: #f8f9fa;
+  --shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+[data-theme="dark"] {
+  --bg: #0f1117; --card: #1a1d27; --border: #2d3142; --text: #e8eaf0;
+  --text2: #9ba3b5; --accent: #748ffc; --accent-h: #5c7cfa;
+  --green: #51cf66; --red: #ff6b6b; --blue: #74c0fc; --purple: #b197fc;
+  --iaa: #2b2610; --iaa-border: #6b5a00;
+  --th-bg: #222536; --hover: #1e2133;
+  --shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px; background: var(--bg); color: var(--text);
+  min-height: 100vh; padding: 20px 24px 40px;
+}
+
+/* ── Top-right button cluster ── */
+.top-right {
+  position: fixed; top: 16px; right: 20px;
+  display: flex; align-items: center; gap: 8px; z-index: 999;
+}
+#theme-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; font-size: 18px; display: flex; align-items: center;
+  justify-content: center; box-shadow: var(--shadow); transition: background .2s;
+}
+#theme-btn:hover { background: var(--hover); }
+.action-btn {
+  height: 36px; padding: 0 16px; border-radius: 8px; border: none;
+  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  box-shadow: var(--shadow); transition: filter .15s, transform .1s;
+}
+.action-btn:hover  { filter: brightness(1.12); }
+.action-btn:active { transform: scale(.97); }
+#execute-btn { background: #2f9e44; color: #fff; }
+#upload-btn  { background: #1971c2; color: #fff; }
+
+/* ── Upload panel ── */
+#upload-panel {
+  position: fixed; top: 62px; right: 20px; z-index: 998;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px; width: 300px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.15);
+  display: none; flex-direction: column; gap: 10px;
+}
+#upload-panel.open { display: flex; }
+#upload-drop {
+  border: 2px dashed var(--border); border-radius: 8px;
+  padding: 20px 12px; text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s;
+  font-size: 13px; color: var(--text2);
+}
+#upload-drop:hover, #upload-drop.drag-over {
+  border-color: #1971c2; background: rgba(25,113,194,.05);
+}
+#upload-drop .drop-icon { font-size: 24px; margin-bottom: 6px; }
+#upload-hint {
+  font-size: 11px; color: var(--text2); text-align: center;
+  background: var(--th-bg); border-radius: 6px; padding: 6px 10px;
+}
+#upload-status {
+  font-size: 12px; color: var(--text2); min-height: 16px; text-align: center;
+}
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
+  background: #333; color: #fff; padding: 10px 20px; border-radius: 8px;
+  font-size: 13px; opacity: 0; transition: opacity .3s, transform .3s;
+  pointer-events: none; z-index: 9999; white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Header ── */
+h1 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.subtitle { color: var(--text2); font-size: 12px; margin-bottom: 18px; }
+
+/* ── Summary card ── */
+.summary-card {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 22px; box-shadow: var(--shadow);
+}
+.summary-item { display: flex; flex-direction: column; align-items: center;
+  min-width: 70px; }
+.s-num { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.s-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.s-total  { color: var(--text); }
+.s-green  { color: var(--green); }
+.s-blue   { color: var(--blue); }
+.s-red    { color: var(--red); }
+.s-purple { color: var(--purple); }
+.s-accent { color: var(--accent); }
+.summary-divider { width: 1px; background: var(--border); align-self: stretch; margin: 0 4px; }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 2px solid var(--border); }
+.tab-btn {
+  padding: 8px 16px; border: none; background: none; cursor: pointer;
+  color: var(--text2); font-size: 13px; font-weight: 500; border-radius: 6px 6px 0 0;
+  border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s;
+}
+.tab-btn:hover { color: var(--text); background: var(--hover); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--card); }
+
+/* ── Tab panels ── */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Search ── */
+.search-bar {
+  width: 260px; padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--card); color: var(--text);
+  font-size: 12px; margin: 12px 0 8px; outline: none;
+}
+.search-bar:focus { border-color: var(--accent); }
+
+/* ── Table wrapper ── */
+.tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border);
+  box-shadow: var(--shadow); background: var(--card); }
+
+table { width: 100%; border-collapse: collapse; table-layout: auto; font-size: 14.3px; }
+
+/* ── Resize handle on th ── */
+th {
+  position: relative; background: var(--th-bg); color: var(--text2);
+  font-weight: 600; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .04em; padding: 9px 12px; white-space: nowrap;
+  user-select: none; cursor: pointer;
+}
+th:hover { background: var(--hover); color: var(--text); }
+th .sort-icon { margin-left: 4px; opacity: .5; font-style: normal; }
+th.sorted-asc .sort-icon::after  { content: " ▲"; }
+th.sorted-desc .sort-icon::after { content: " ▼"; }
+th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after { content: " ⇅"; }
+
+.resize-handle {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 5px;
+  cursor: col-resize; z-index: 1;
+}
+.resize-handle:hover, .resize-handle.active { background: var(--accent); opacity: .5; }
+
+td { padding: 8px 12px; border-top: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: var(--hover); }
+
+.iaa-row td { background: var(--iaa); }
+.iaa-row:hover td { filter: brightness(.97); }
+[data-theme="dark"] .iaa-row td { background: var(--iaa); }
+
+.profit-red { color: var(--red) !important; font-weight: 600; }
+.game-cell { font-weight: 500; max-width: 200px; }
+.pub-cell  { color: var(--text2); font-size: 12px; max-width: 160px; }
+
+/* ── Checkbox & notes ── */
+.check-cell input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+.notes-input {
+  width: 100%; min-width: 120px; padding: 3px 6px; border: 1px solid var(--border);
+  border-radius: 4px; background: transparent; color: var(--text); font-size: 12px;
+  outline: none;
+}
+.notes-input:focus { border-color: var(--accent); background: var(--card); }
+
+/* ── Empty state ── */
+.empty { padding: 40px; text-align: center; color: var(--text2); font-size: 13px; }
+
+/* ── IAA warning tooltip ── */
+.iaa-warn { cursor: help; font-style: normal; }
+
+/* ── Tab banners ── */
+.tab-banner {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; border-radius: 6px; margin-bottom: 8px;
+  font-size: 12px; line-height: 1.4;
+}
+.tab-banner.clean {
+  background: #ebfbee; border: 1px solid #8ce99a; color: #2f9e44;
+}
+.tab-banner.warn {
+  background: #fff9db; border: 1px solid #ffe066; color: #835900;
+}
+[data-theme="dark"] .tab-banner.clean {
+  background: #0d2e14; border-color: #2f9e44; color: #69db7c;
+}
+[data-theme="dark"] .tab-banner.warn {
+  background: #2b2300; border-color: #e67700; color: #ffd43b;
+}
+.tab-banner .banner-icon { font-size: 14px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="top-right">
+  <button id="execute-btn" class="action-btn" onclick="onExecute()">⚡ EXECUTE</button>
+  <button id="upload-btn"  class="action-btn" onclick="toggleUpload()">⬆ UPLOAD</button>
+  <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light">🌙</button>
+</div>
+
+<!-- Upload panel -->
+<div id="upload-panel">
+  <div id="upload-drop" onclick="document.getElementById('csv-input').click()"
+       ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+    <div class="drop-icon">📂</div>
+    <div>Click or drag &amp; drop CSV files here</div>
+    <input id="csv-input" type="file" accept=".csv,.tsv,.txt" multiple
+           style="display:none" onchange="onFilePick(this.files)">
+  </div>
+  <div id="upload-hint">Last 90 days &nbsp;·&nbsp; Games &nbsp;·&nbsp; WW &nbsp;·&nbsp; Both stores</div>
+  <label id="preview-label" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer"
+         title="Writes to output_preview.html — your real list stays untouched">
+    <input type="checkbox" id="preview-check"> Preview only (don't update the list)
+  </label>
+  <div id="upload-status"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<h1>Game Lead Finder &nbsp;<span style="font-weight:400;font-size:14px;color:var(--text2)">$60K–$150K</span></h1>
+<div class="subtitle">Run date: 2026-06-10 &nbsp;·&nbsp; Platform: Google Play (Unified) &nbsp;·&nbsp; Window: 90-day CSV</div>
+
+<div class="summary-card">
+  <div class="summary-item"><span class="s-num s-total">125</span><span class="s-label">Total</span></div>
+  <div class="summary-divider"></div>
+  <div class="summary-item"><span class="s-num s-green">55</span><span class="s-label">Growing</span></div>
+  <div class="summary-item"><span class="s-num s-blue">32</span><span class="s-label">Stable</span></div>
+  <div class="summary-item"><span class="s-num s-red">38</span><span class="s-label">Declining</span></div>
+  <div class="summary-item"><span class="s-num s-purple">0</span><span class="s-label">Returning</span></div>
+  <div class="summary-divider"></div>
+  <div class="summary-item"><span class="s-num s-accent" id="reviewed-count">0</span><span class="s-label">Reviewed</span></div>
+  <div class="summary-item"><span class="s-num" id="reviewed-pct">0%</span><span class="s-label">% Done</span></div>
+  <div class="summary-item"><span class="s-num" id="notes-count">0</span><span class="s-label">With Notes</span></div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('growing',this)">📈 Growing (55)</button>
+  <button class="tab-btn" onclick="switchTab('stable',this)">➡️ Stable (32)</button>
+  <button class="tab-btn" onclick="switchTab('declining',this)">📉 Declining (38)</button>
+  <button class="tab-btn" onclick="switchTab('returning',this)">🔄 Returning (0)</button>
+</div>
+
+<!-- ── Growing ── -->
+<div class="tab-panel active" id="tab-growing">
+  <input class="search-bar" placeholder="Search games…" oninput="filterTab('growing',this.value)">
+  <div class="tab-banner warn"><span class="banner-icon">⚠️</span><span>These games may already exist in Salesforce. Cross-check before outreach. <em>Salesforce dedup coming soon.</em></span></div>
+  <div class="tbl-wrap">
+    <table id="tbl-growing">
+      <thead><tr>
+        <th style="width:42px">#<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Game<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Publisher<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Added<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="profit">Est. Profit/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="rev">Revenue/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="dl">Downloads/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Rev Trend (90d)<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th style="width:64px">Checked?</th>
+        <th>Notes</th>
+      </tr></thead>
+      <tbody><tr class="" data-name="Yu Yu Hakusho：Slugfest" data-tab="growing" data-added="2026-06-10" data-profit="149153" data-rev="227665" data-dl="66902"><td>1</td><td class="game-cell">Yu Yu Hakusho：Slugfest</td><td class="pub-cell">Zenifun Technology</td><td>2026-06-10</td><td>$149K</td><td>$228K</td><td>67K</td><td>📈 +64% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Yu Yu Hakusho：Slugfest" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Yu Yu Hakusho：Slugfest" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="ClawCrazy: Real Claw Machine" data-tab="growing" data-added="2026-05-09" data-profit="138350" data-rev="212191" data-dl="24339"><td>2</td><td class="game-cell">ClawCrazy: Real Claw Machine</td><td class="pub-cell">CoinCrazy (Arcade Apps)</td><td>2026-05-09</td><td>$138K</td><td>$212K</td><td>24K</td><td>📈 +29%</td><td class="check-cell"><input type="checkbox" data-game="ClawCrazy: Real Claw Machine" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="ClawCrazy: Real Claw Machine" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Soccer Referee Simulator 2026" data-tab="growing" data-added="2026-06-10" data-profit="132538" data-rev="41462" data-dl="2650753"><td>3</td><td class="game-cell">Soccer Referee Simulator 2026 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">JLabs Games</td><td>2026-06-10</td><td>$133K</td><td>$41K</td><td>2.7M</td><td>📈 +16%</td><td class="check-cell"><input type="checkbox" data-game="Soccer Referee Simulator 2026" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Soccer Referee Simulator 2026" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Hitwicket™ Cricket Game 2026" data-tab="growing" data-added="2026-05-12" data-profit="124030" data-rev="178466" data-dl="458666"><td>4</td><td class="game-cell">Hitwicket™ Cricket Game 2026</td><td class="pub-cell">Hitwicket Cricket Games</td><td>2026-05-12</td><td>$124K</td><td>$178K</td><td>459K</td><td>📈 +16%</td><td class="check-cell"><input type="checkbox" data-game="Hitwicket™ Cricket Game 2026" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Hitwicket™ Cricket Game 2026" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Crostic Crossword－Word Puzzles" data-tab="growing" data-added="2026-06-10" data-profit="120953" data-rev="38791" data-dl="2419062"><td>5</td><td class="game-cell">Crostic Crossword－Word Puzzles 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Severex</td><td>2026-06-10</td><td>$121K</td><td>$39K</td><td>2.4M</td><td>📈 +67% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Crostic Crossword－Word Puzzles" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Crostic Crossword－Word Puzzles" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Pines Peak: Merge Travel Games" data-tab="growing" data-added="2026-05-09" data-profit="119747" data-rev="183497" data-dl="27107"><td>6</td><td class="game-cell">Pines Peak: Merge Travel Games</td><td class="pub-cell">Vizor Apps</td><td>2026-05-09</td><td>$120K</td><td>$183K</td><td>27K</td><td>📈 +1390% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Pines Peak: Merge Travel Games" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Pines Peak: Merge Travel Games" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Slots Slots™: 777 Casino Games" data-tab="growing" data-added="2026-06-10" data-profit="116076" data-rev="172290" data-dl="233561"><td>7</td><td class="game-cell">Slots Slots™: 777 Casino Games</td><td class="pub-cell">Slots</td><td>2026-06-10</td><td>$116K</td><td>$172K</td><td>234K</td><td>📈 +85% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Slots Slots™: 777 Casino Games" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Slots Slots™: 777 Casino Games" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Trading Arena-Crypto Simulator" data-tab="growing" data-added="2026-06-10" data-profit="114922" data-rev="4529" data-dl="2298432"><td>8</td><td class="game-cell">Trading Arena-Crypto Simulator 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Edusystems</td><td>2026-06-10</td><td>$115K</td><td>$5K</td><td>2.3M</td><td>📈 +32%</td><td class="check-cell"><input type="checkbox" data-game="Trading Arena-Crypto Simulator" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Trading Arena-Crypto Simulator" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Aimy(アイミー)キャラクリ＆着せ替え＆AIチャット" data-tab="growing" data-added="2026-06-10" data-profit="114618" data-rev="174392" data-dl="72177"><td>9</td><td class="game-cell">Aimy(アイミー)キャラクリ＆着せ替え＆AIチャット</td><td class="pub-cell">Aisaac</td><td>2026-06-10</td><td>$115K</td><td>$174K</td><td>72K</td><td>📈 +121% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Aimy(アイミー)キャラクリ＆着せ替え＆AIチャット" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Aimy(アイミー)キャラクリ＆着せ替え＆AIチャット" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Truck Masters: India Simulator" data-tab="growing" data-added="2026-06-10" data-profit="114118" data-rev="9217" data-dl="2282362"><td>10</td><td class="game-cell">Truck Masters: India Simulator 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Highbrow Interactive</td><td>2026-06-10</td><td>$114K</td><td>$9K</td><td>2.3M</td><td>📈 +17%</td><td class="check-cell"><input type="checkbox" data-game="Truck Masters: India Simulator" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Truck Masters: India Simulator" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Earn to Die Rogue" data-tab="growing" data-added="2026-05-23" data-profit="112194" data-rev="163138" data-dl="351650"><td>11</td><td class="game-cell">Earn to Die Rogue</td><td class="pub-cell">Not Doppler</td><td>2026-05-23</td><td>$112K</td><td>$163K</td><td>352K</td><td>📈 +36%</td><td class="check-cell"><input type="checkbox" data-game="Earn to Die Rogue" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Earn to Die Rogue" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Zombusters" data-tab="growing" data-added="2026-05-23" data-profit="109448" data-rev="165358" data-dl="112284"><td>12</td><td class="game-cell">Zombusters</td><td class="pub-cell">voilà!</td><td>2026-05-23</td><td>$109K</td><td>$165K</td><td>112K</td><td>📈 +236% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Zombusters" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Zombusters" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Pocket Paws: My lovely dogs" data-tab="growing" data-added="2026-05-23" data-profit="108081" data-rev="158757" data-dl="279330"><td>13</td><td class="game-cell">Pocket Paws: My lovely dogs</td><td class="pub-cell">Landmark Games</td><td>2026-05-23</td><td>$108K</td><td>$159K</td><td>279K</td><td>📈 +117% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Pocket Paws: My lovely dogs" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Pocket Paws: My lovely dogs" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Find Hidden Objects - Spot It!" data-tab="growing" data-added="2026-06-10" data-profit="105960" data-rev="13921" data-dl="2119197"><td>14</td><td class="game-cell">Find Hidden Objects - Spot It! 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Yolo Game Studios</td><td>2026-06-10</td><td>$106K</td><td>$14K</td><td>2.1M</td><td>📈 +18%</td><td class="check-cell"><input type="checkbox" data-game="Find Hidden Objects - Spot It!" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Find Hidden Objects - Spot It!" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Silkroad Origin Mobile Türkiye" data-tab="growing" data-added="2026-05-12" data-profit="103816" data-rev="158682" data-dl="38443"><td>15</td><td class="game-cell">Silkroad Origin Mobile Türkiye</td><td class="pub-cell">Gosu Online</td><td>2026-05-12</td><td>$104K</td><td>$159K</td><td>38K</td><td>📈 +172% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Silkroad Origin Mobile Türkiye" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Silkroad Origin Mobile Türkiye" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Sheep Dash" data-tab="growing" data-added="2026-06-10" data-profit="103031" data-rev="36678" data-dl="2060611"><td>16</td><td class="game-cell">Sheep Dash 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Snap Brain Games</td><td>2026-06-10</td><td>$103K</td><td>$37K</td><td>2.1M</td><td>📈 +835% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Sheep Dash" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Sheep Dash" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Thợ Săn Quỷ: Đại Chiến Dị Giới" data-tab="growing" data-added="2026-05-12" data-profit="100633" data-rev="151555" data-dl="121270"><td>17</td><td class="game-cell">Thợ Săn Quỷ: Đại Chiến Dị Giới</td><td class="pub-cell">Appota</td><td>2026-05-12</td><td>$101K</td><td>$152K</td><td>121K</td><td>📈 +542% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Thợ Săn Quỷ: Đại Chiến Dị Giới" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Thợ Săn Quỷ: Đại Chiến Dị Giới" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Taimanin Squad" data-tab="growing" data-added="2026-05-09" data-profit="100323" data-rev="154039" data-dl="11272"><td>18</td><td class="game-cell">Taimanin Squad</td><td class="pub-cell">Gremory Games</td><td>2026-05-09</td><td>$100K</td><td>$154K</td><td>11K</td><td>📈 +324% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Taimanin Squad" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Taimanin Squad" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Motorcycle Real Simulator" data-tab="growing" data-added="2026-06-10" data-profit="96056" data-rev="4603" data-dl="1921111"><td>19</td><td class="game-cell">Motorcycle Real Simulator 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Cerebellium Apps</td><td>2026-06-10</td><td>$96K</td><td>$5K</td><td>1.9M</td><td>📈 +16%</td><td class="check-cell"><input type="checkbox" data-game="Motorcycle Real Simulator" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Motorcycle Real Simulator" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Sage&#x27;s Path: Convergence" data-tab="growing" data-added="2026-06-10" data-profit="94528" data-rev="143145" data-dl="84799"><td>20</td><td class="game-cell">Sage&#x27;s Path: Convergence</td><td class="pub-cell">Gwillz</td><td>2026-06-10</td><td>$95K</td><td>$143K</td><td>85K</td><td>📈 +306% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Sage&#x27;s Path: Convergence" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Sage&#x27;s Path: Convergence" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Jewel popper - Play &amp; Win" data-tab="growing" data-added="2026-05-23" data-profit="93264" data-rev="129576" data-dl="516515"><td>21</td><td class="game-cell">Jewel popper - Play &amp; Win</td><td class="pub-cell">Blazing App Studio</td><td>2026-05-23</td><td>$93K</td><td>$130K</td><td>517K</td><td>📈 +32%</td><td class="check-cell"><input type="checkbox" data-game="Jewel popper - Play &amp; Win" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Jewel popper - Play &amp; Win" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Dream Recipe : Merge Cooking" data-tab="growing" data-added="2026-05-23" data-profit="92483" data-rev="136588" data-dl="211442"><td>22</td><td class="game-cell">Dream Recipe : Merge Cooking</td><td class="pub-cell">HYSPIRE</td><td>2026-05-23</td><td>$92K</td><td>$137K</td><td>211K</td><td>📈 +179% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Dream Recipe : Merge Cooking" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Dream Recipe : Merge Cooking" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="World Soccer Champs" data-tab="growing" data-added="2026-05-23" data-profit="92431" data-rev="131873" data-dl="383654"><td>23</td><td class="game-cell">World Soccer Champs</td><td class="pub-cell">Monkey I-Brow Studios</td><td>2026-05-23</td><td>$92K</td><td>$132K</td><td>384K</td><td>📈 +19%</td><td class="check-cell"><input type="checkbox" data-game="World Soccer Champs" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="World Soccer Champs" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Word Screw - 3D Unscrew Bolts" data-tab="growing" data-added="2026-05-23" data-profit="91313" data-rev="134572" data-dl="219500"><td>24</td><td class="game-cell">Word Screw - 3D Unscrew Bolts</td><td class="pub-cell">Astrasen Play</td><td>2026-05-23</td><td>$91K</td><td>$135K</td><td>220K</td><td>📈 +307% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Word Screw - 3D Unscrew Bolts" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Word Screw - 3D Unscrew Bolts" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Last Hunter K : Seoul" data-tab="growing" data-added="2026-05-23" data-profit="90928" data-rev="137618" data-dl="84372"><td>25</td><td class="game-cell">Last Hunter K : Seoul</td><td class="pub-cell">HAEGIN</td><td>2026-05-23</td><td>$91K</td><td>$138K</td><td>84K</td><td>📈 +4449% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Last Hunter K : Seoul" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Last Hunter K : Seoul" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Drive Mad" data-tab="growing" data-added="2026-06-10" data-profit="89754" data-rev="6547" data-dl="1795072"><td>26</td><td class="game-cell">Drive Mad 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Poki.com</td><td>2026-06-10</td><td>$90K</td><td>$7K</td><td>1.8M</td><td>📈 +84% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Drive Mad" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Drive Mad" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Nuts Factory: Nut Sort Puzzle" data-tab="growing" data-added="2026-05-23" data-profit="88829" data-rev="134779" data-dl="69844"><td>27</td><td class="game-cell">Nuts Factory: Nut Sort Puzzle</td><td class="pub-cell">Playful Bytes</td><td>2026-05-23</td><td>$89K</td><td>$135K</td><td>70K</td><td>📈 +184% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Nuts Factory: Nut Sort Puzzle" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Nuts Factory: Nut Sort Puzzle" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="King God Castle: Luminous Fate" data-tab="growing" data-added="2026-06-10" data-profit="88513" data-rev="135318" data-dl="31759"><td>28</td><td class="game-cell">King God Castle: Luminous Fate</td><td class="pub-cell">AwesomePiece</td><td>2026-06-10</td><td>$89K</td><td>$135K</td><td>32K</td><td>📈 +19%</td><td class="check-cell"><input type="checkbox" data-game="King God Castle: Luminous Fate" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="King God Castle: Luminous Fate" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Poppy Playtime Chapter 1" data-tab="growing" data-added="2026-05-23" data-profit="87463" data-rev="133334" data-dl="45518"><td>29</td><td class="game-cell">Poppy Playtime Chapter 1</td><td class="pub-cell">Mob Entertainment</td><td>2026-05-23</td><td>$87K</td><td>$133K</td><td>46K</td><td>📈 +44%</td><td class="check-cell"><input type="checkbox" data-game="Poppy Playtime Chapter 1" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Poppy Playtime Chapter 1" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Infinity Empires" data-tab="growing" data-added="2026-05-09" data-profit="85454" data-rev="130739" data-dl="27059"><td>30</td><td class="game-cell">Infinity Empires</td><td class="pub-cell">IFun Games</td><td>2026-05-09</td><td>$85K</td><td>$131K</td><td>27K</td><td>📈 +20%</td><td class="check-cell"><input type="checkbox" data-game="Infinity Empires" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Infinity Empires" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Poppy Playtime Chapter 4" data-tab="growing" data-added="2026-05-23" data-profit="83051" data-rev="127022" data-dl="27830"><td>31</td><td class="game-cell">Poppy Playtime Chapter 4</td><td class="pub-cell">Mob Entertainment</td><td>2026-05-23</td><td>$83K</td><td>$127K</td><td>28K</td><td>📈 +24%</td><td class="check-cell"><input type="checkbox" data-game="Poppy Playtime Chapter 4" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Poppy Playtime Chapter 4" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Texas Holdem Poker" data-tab="growing" data-added="2026-05-23" data-profit="82346" data-rev="125156" data-dl="56860"><td>32</td><td class="game-cell">Texas Holdem Poker</td><td class="pub-cell">GeaxGame</td><td>2026-05-23</td><td>$82K</td><td>$125K</td><td>57K</td><td>📈 +12%</td><td class="check-cell"><input type="checkbox" data-game="Texas Holdem Poker" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Texas Holdem Poker" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Family Go! - Lifetime Sim game" data-tab="growing" data-added="2026-06-10" data-profit="82040" data-rev="113411" data-dl="475564"><td>33</td><td class="game-cell">Family Go! - Lifetime Sim game</td><td class="pub-cell">KIKO FUN INTERACTIVE ENTERTAINMENT</td><td>2026-06-10</td><td>$82K</td><td>$113K</td><td>476K</td><td>📈 +1348% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Family Go! - Lifetime Sim game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Family Go! - Lifetime Sim game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Real Mah Jongg" data-tab="growing" data-added="2026-06-10" data-profit="80668" data-rev="123775" data-dl="12282"><td>34</td><td class="game-cell">Real Mah Jongg</td><td class="pub-cell">Mattron Entertainment</td><td>2026-06-10</td><td>$81K</td><td>$124K</td><td>12K</td><td>📈 +2128% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Real Mah Jongg" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Real Mah Jongg" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Icy Hearts: Merge &amp; Story" data-tab="growing" data-added="2026-05-23" data-profit="80273" data-rev="121272" data-dl="82628"><td>35</td><td class="game-cell">Icy Hearts: Merge &amp; Story</td><td class="pub-cell">Microfun</td><td>2026-05-23</td><td>$80K</td><td>$121K</td><td>83K</td><td>📈 +297% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Icy Hearts: Merge &amp; Story" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Icy Hearts: Merge &amp; Story" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="TORN" data-tab="growing" data-added="2026-05-09" data-profit="77798" data-rev="119041" data-dl="24107"><td>36</td><td class="game-cell">TORN</td><td class="pub-cell">TORN</td><td>2026-05-09</td><td>$78K</td><td>$119K</td><td>24K</td><td>📈 +32%</td><td class="check-cell"><input type="checkbox" data-game="TORN" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="TORN" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Miêu Đế Tam Quốc" data-tab="growing" data-added="2026-05-23" data-profit="77261" data-rev="116816" data-dl="76013"><td>37</td><td class="game-cell">Miêu Đế Tam Quốc</td><td class="pub-cell">VelaGame</td><td>2026-05-23</td><td>$77K</td><td>$117K</td><td>76K</td><td>📈 +170% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Miêu Đế Tam Quốc" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Miêu Đế Tam Quốc" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="난세표류기 - 한국사 방치형 RPG" data-tab="growing" data-added="2026-05-23" data-profit="77247" data-rev="116727" data-dl="78532"><td>38</td><td class="game-cell">난세표류기 - 한국사 방치형 RPG</td><td class="pub-cell">Twokang Project</td><td>2026-05-23</td><td>$77K</td><td>$117K</td><td>79K</td><td>📈 +239% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="난세표류기 - 한국사 방치형 RPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="난세표류기 - 한국사 방치형 RPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Super Goal: Fun Soccer Game" data-tab="growing" data-added="2026-06-10" data-profit="76790" data-rev="5393" data-dl="1535801"><td>39</td><td class="game-cell">Super Goal: Fun Soccer Game 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Gamegou</td><td>2026-06-10</td><td>$77K</td><td>$5K</td><td>1.5M</td><td>📈 +47%</td><td class="check-cell"><input type="checkbox" data-game="Super Goal: Fun Soccer Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Super Goal: Fun Soccer Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Pawn to Don Mafia Crime Story" data-tab="growing" data-added="2026-05-23" data-profit="71736" data-rev="90471" data-dl="738824"><td>40</td><td class="game-cell">Pawn to Don Mafia Crime Story</td><td class="pub-cell">Funcell Games</td><td>2026-05-23</td><td>$72K</td><td>$90K</td><td>739K</td><td>📈 +390% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Pawn to Don Mafia Crime Story" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Pawn to Don Mafia Crime Story" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Golf Dreams" data-tab="growing" data-added="2026-06-10" data-profit="69781" data-rev="103663" data-dl="137120"><td>41</td><td class="game-cell">Golf Dreams</td><td class="pub-cell">Rather Unique</td><td>2026-06-10</td><td>$70K</td><td>$104K</td><td>137K</td><td>📈 +147% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Golf Dreams" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Golf Dreams" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Racing Kingdom" data-tab="growing" data-added="2026-05-23" data-profit="68640" data-rev="98463" data-dl="265097"><td>42</td><td class="game-cell">Racing Kingdom</td><td class="pub-cell">SuperGears</td><td>2026-05-23</td><td>$69K</td><td>$98K</td><td>265K</td><td>📈 +86% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Racing Kingdom" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Racing Kingdom" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Anime Dating Sim: Waifu Love" data-tab="growing" data-added="2026-05-23" data-profit="67544" data-rev="94271" data-dl="358200"><td>43</td><td class="game-cell">Anime Dating Sim: Waifu Love</td><td class="pub-cell">Ciprosoft</td><td>2026-05-23</td><td>$68K</td><td>$94K</td><td>358K</td><td>📈 +15%</td><td class="check-cell"><input type="checkbox" data-game="Anime Dating Sim: Waifu Love" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Anime Dating Sim: Waifu Love" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Subnautica" data-tab="growing" data-added="2026-06-10" data-profit="67254" data-rev="102821" data-dl="24017"><td>44</td><td class="game-cell">Subnautica</td><td class="pub-cell">Unknown Worlds</td><td>2026-06-10</td><td>$67K</td><td>$103K</td><td>24K</td><td>📈 +22%</td><td class="check-cell"><input type="checkbox" data-game="Subnautica" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Subnautica" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Forest Match - Earn rewards" data-tab="growing" data-added="2026-05-23" data-profit="67043" data-rev="92293" data-dl="403021"><td>45</td><td class="game-cell">Forest Match - Earn rewards</td><td class="pub-cell">Blazing App Studio</td><td>2026-05-23</td><td>$67K</td><td>$92K</td><td>403K</td><td>📈 +10%</td><td class="check-cell"><input type="checkbox" data-game="Forest Match - Earn rewards" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Forest Match - Earn rewards" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="American Mahjong Practice" data-tab="growing" data-added="2026-06-10" data-profit="67027" data-rev="102382" data-dl="27363"><td>46</td><td class="game-cell">American Mahjong Practice</td><td class="pub-cell">Eight Bam</td><td>2026-06-10</td><td>$67K</td><td>$102K</td><td>27K</td><td>📈 +203% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="American Mahjong Practice" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="American Mahjong Practice" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Warline: Sniper Strike" data-tab="growing" data-added="2026-06-10" data-profit="66466" data-rev="98718" data-dl="131396"><td>47</td><td class="game-cell">Warline: Sniper Strike</td><td class="pub-cell">Powerfantasy HK</td><td>2026-06-10</td><td>$66K</td><td>$99K</td><td>131K</td><td>📈 +2582% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Warline: Sniper Strike" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Warline: Sniper Strike" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="CookieRun:Witch’s Castle Blast" data-tab="growing" data-added="2026-05-09" data-profit="65644" data-rev="100705" data-dl="10599"><td>48</td><td class="game-cell">CookieRun:Witch’s Castle Blast</td><td class="pub-cell">Devsisters</td><td>2026-05-09</td><td>$66K</td><td>$101K</td><td>11K</td><td>📈 +46%</td><td class="check-cell"><input type="checkbox" data-game="CookieRun:Witch’s Castle Blast" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="CookieRun:Witch’s Castle Blast" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Claw Eden - Real Claw Machine" data-tab="growing" data-added="2026-06-10" data-profit="65538" data-rev="98989" data-dl="68314"><td>49</td><td class="game-cell">Claw Eden - Real Claw Machine</td><td class="pub-cell">Claw Eden</td><td>2026-06-10</td><td>$66K</td><td>$99K</td><td>68K</td><td>📈 +71% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Claw Eden - Real Claw Machine" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Claw Eden - Real Claw Machine" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Battle Belles: Card" data-tab="growing" data-added="2026-05-23" data-profit="63916" data-rev="96255" data-dl="77195"><td>50</td><td class="game-cell">Battle Belles: Card</td><td class="pub-cell">Arfa IT</td><td>2026-05-23</td><td>$64K</td><td>$96K</td><td>77K</td><td>📈 +430% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Battle Belles: Card" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Battle Belles: Card" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Screw All Out - Jam Master" data-tab="growing" data-added="2026-06-10" data-profit="63435" data-rev="64303" data-dl="1268709"><td>51</td><td class="game-cell">Screw All Out - Jam Master 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Warrior Game</td><td>2026-06-10</td><td>$63K</td><td>$64K</td><td>1.3M</td><td>📈 +366% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Screw All Out - Jam Master" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Screw All Out - Jam Master" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Word Solitaire Now!" data-tab="growing" data-added="2026-06-10" data-profit="62915" data-rev="84138" data-dl="470009"><td>52</td><td class="game-cell">Word Solitaire Now!</td><td class="pub-cell">LE TECH</td><td>2026-06-10</td><td>$63K</td><td>$84K</td><td>470K</td><td>📈 +249% ⚠️</td><td class="check-cell"><input type="checkbox" data-game="Word Solitaire Now!" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Word Solitaire Now!" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Dungeon Sisters : IDLE RPG" data-tab="growing" data-added="2026-05-09" data-profit="62577" data-rev="95736" data-dl="19924"><td>53</td><td class="game-cell">Dungeon Sisters : IDLE RPG</td><td class="pub-cell">Lobstar Games</td><td>2026-05-09</td><td>$63K</td><td>$96K</td><td>20K</td><td>📈 +21%</td><td class="check-cell"><input type="checkbox" data-game="Dungeon Sisters : IDLE RPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Dungeon Sisters : IDLE RPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Everyday Puzzles: Mini Games" data-tab="growing" data-added="2026-06-10" data-profit="61907" data-rev="79393" data-dl="588645"><td>54</td><td class="game-cell">Everyday Puzzles: Mini Games</td><td class="pub-cell">Fanatee</td><td>2026-06-10</td><td>$62K</td><td>$79K</td><td>589K</td><td>📈 +25%</td><td class="check-cell"><input type="checkbox" data-game="Everyday Puzzles: Mini Games" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Everyday Puzzles: Mini Games" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Poppy Playtime Chapter 3" data-tab="growing" data-added="2026-05-23" data-profit="60200" data-rev="92085" data-dl="19677"><td>55</td><td class="game-cell">Poppy Playtime Chapter 3</td><td class="pub-cell">Mob Entertainment</td><td>2026-05-23</td><td>$60K</td><td>$92K</td><td>20K</td><td>📈 +37%</td><td class="check-cell"><input type="checkbox" data-game="Poppy Playtime Chapter 3" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Poppy Playtime Chapter 3" placeholder="…" oninput="saveNote(this)"></td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Stable ── -->
+<div class="tab-panel" id="tab-stable">
+  <input class="search-bar" placeholder="Search games…" oninput="filterTab('stable',this.value)">
+  <div class="tab-banner clean"><span class="banner-icon">✅</span><span>These games are <strong>not in Salesforce</strong> — verified clean leads ready for review.</span></div>
+  <div class="tbl-wrap">
+    <table id="tbl-stable">
+      <thead><tr>
+        <th style="width:42px">#<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Game<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Publisher<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Added<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="profit">Est. Profit/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="rev">Revenue/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="dl">Downloads/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Rev Trend (90d)<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th style="width:64px">Checked?</th>
+        <th>Notes</th>
+      </tr></thead>
+      <tbody><tr class="" data-name="Legend of Slime: Idle RPG" data-tab="stable" data-added="2026-05-12" data-profit="149003" data-rev="228230" data-dl="37360"><td>1</td><td class="game-cell">Legend of Slime: Idle RPG</td><td class="pub-cell">LoadComplete</td><td>2026-05-12</td><td>$149K</td><td>$228K</td><td>37K</td><td>➡️ -2%</td><td class="check-cell"><input type="checkbox" data-game="Legend of Slime: Idle RPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Legend of Slime: Idle RPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Jewels Magic: Mystery Match3" data-tab="stable" data-added="2026-05-12" data-profit="143441" data-rev="219320" data-dl="50481"><td>2</td><td class="game-cell">Jewels Magic: Mystery Match3</td><td class="pub-cell">XLsoft</td><td>2026-05-12</td><td>$143K</td><td>$219K</td><td>50K</td><td>➡️ +2%</td><td class="check-cell"><input type="checkbox" data-game="Jewels Magic: Mystery Match3" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Jewels Magic: Mystery Match3" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Bowmasters - Multiplayer Games" data-tab="stable" data-added="2026-06-10" data-profit="140210" data-rev="182199" data-dl="2804195"><td>3</td><td class="game-cell">Bowmasters - Multiplayer Games 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Playgendary</td><td>2026-06-10</td><td>$140K</td><td>$182K</td><td>2.8M</td><td>➡️ +2%</td><td class="check-cell"><input type="checkbox" data-game="Bowmasters - Multiplayer Games" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Bowmasters - Multiplayer Games" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Tiles Hop Music &amp; Ball Game" data-tab="stable" data-added="2026-06-10" data-profit="135478" data-rev="91721" data-dl="2709551"><td>4</td><td class="game-cell">Tiles Hop Music &amp; Ball Game 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Amanotes</td><td>2026-06-10</td><td>$135K</td><td>$92K</td><td>2.7M</td><td>➡️ +6%</td><td class="check-cell"><input type="checkbox" data-game="Tiles Hop Music &amp; Ball Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Tiles Hop Music &amp; Ball Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Truckers of Europe 3" data-tab="stable" data-added="2026-06-10" data-profit="133818" data-rev="54036" data-dl="2676368"><td>5</td><td class="game-cell">Truckers of Europe 3 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Wanda Software</td><td>2026-06-10</td><td>$134K</td><td>$54K</td><td>2.7M</td><td>➡️ -5%</td><td class="check-cell"><input type="checkbox" data-game="Truckers of Europe 3" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Truckers of Europe 3" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Merge Sweets" data-tab="stable" data-added="2026-05-12" data-profit="116269" data-rev="175179" data-dl="137303"><td>6</td><td class="game-cell">Merge Sweets</td><td class="pub-cell">Springcomes</td><td>2026-05-12</td><td>$116K</td><td>$175K</td><td>137K</td><td>➡️ +9%</td><td class="check-cell"><input type="checkbox" data-game="Merge Sweets" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Merge Sweets" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Idle Slayer - Pixel RPG" data-tab="stable" data-added="2026-05-23" data-profit="116199" data-rev="176077" data-dl="99919"><td>7</td><td class="game-cell">Idle Slayer - Pixel RPG</td><td class="pub-cell">Pablo Leban</td><td>2026-05-23</td><td>$116K</td><td>$176K</td><td>100K</td><td>➡️ +7%</td><td class="check-cell"><input type="checkbox" data-game="Idle Slayer - Pixel RPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Idle Slayer - Pixel RPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Lord of Seas: Survival &amp; War" data-tab="stable" data-added="2026-05-12" data-profit="115051" data-rev="175068" data-dl="71844"><td>8</td><td class="game-cell">Lord of Seas: Survival &amp; War</td><td class="pub-cell">Atlas Studio</td><td>2026-05-12</td><td>$115K</td><td>$175K</td><td>72K</td><td>➡️ -2%</td><td class="check-cell"><input type="checkbox" data-game="Lord of Seas: Survival &amp; War" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Lord of Seas: Survival &amp; War" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Red Ball 4" data-tab="stable" data-added="2026-06-10" data-profit="113933" data-rev="19413" data-dl="2278665"><td>9</td><td class="game-cell">Red Ball 4 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">FDG Entertainment</td><td>2026-06-10</td><td>$114K</td><td>$19K</td><td>2.3M</td><td>➡️ +2%</td><td class="check-cell"><input type="checkbox" data-game="Red Ball 4" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Red Ball 4" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Traffic Racer" data-tab="stable" data-added="2026-06-10" data-profit="103759" data-rev="19764" data-dl="2075180"><td>10</td><td class="game-cell">Traffic Racer 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">SK Games</td><td>2026-06-10</td><td>$104K</td><td>$20K</td><td>2.1M</td><td>➡️ -8%</td><td class="check-cell"><input type="checkbox" data-game="Traffic Racer" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Traffic Racer" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="PGA TOUR Golf Shootout" data-tab="stable" data-added="2026-05-12" data-profit="103270" data-rev="157418" data-dl="54172"><td>11</td><td class="game-cell">PGA TOUR Golf Shootout</td><td class="pub-cell">Concrete Software</td><td>2026-05-12</td><td>$103K</td><td>$157K</td><td>54K</td><td>➡️ -3%</td><td class="check-cell"><input type="checkbox" data-game="PGA TOUR Golf Shootout" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="PGA TOUR Golf Shootout" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Zombie Tsunami" data-tab="stable" data-added="2026-06-10" data-profit="100381" data-rev="26051" data-dl="2007616"><td>12</td><td class="game-cell">Zombie Tsunami 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Mobigame</td><td>2026-06-10</td><td>$100K</td><td>$26K</td><td>2.0M</td><td>➡️ +6%</td><td class="check-cell"><input type="checkbox" data-game="Zombie Tsunami" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Zombie Tsunami" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="AU2 Mobile-ID" data-tab="stable" data-added="2026-05-12" data-profit="93665" data-rev="141618" data-dl="92199"><td>13</td><td class="game-cell">AU2 Mobile-ID</td><td class="pub-cell">Uniugame</td><td>2026-05-12</td><td>$94K</td><td>$142K</td><td>92K</td><td>➡️ +5%</td><td class="check-cell"><input type="checkbox" data-game="AU2 Mobile-ID" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="AU2 Mobile-ID" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="YoYa Sparkle: Style Pop" data-tab="stable" data-added="2026-06-10" data-profit="93109" data-rev="8584" data-dl="1862182"><td>14</td><td class="game-cell">YoYa Sparkle: Style Pop 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">YoYa Games</td><td>2026-06-10</td><td>$93K</td><td>$9K</td><td>1.9M</td><td>➡️ +1%</td><td class="check-cell"><input type="checkbox" data-game="YoYa Sparkle: Style Pop" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="YoYa Sparkle: Style Pop" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Animal Hunter : Wild Sniper" data-tab="stable" data-added="2026-05-12" data-profit="91026" data-rev="135477" data-dl="169497"><td>15</td><td class="game-cell">Animal Hunter : Wild Sniper</td><td class="pub-cell">Counter Terriost</td><td>2026-05-12</td><td>$91K</td><td>$135K</td><td>169K</td><td>➡️ -10%</td><td class="check-cell"><input type="checkbox" data-game="Animal Hunter : Wild Sniper" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Animal Hunter : Wild Sniper" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Royal Paiza Club" data-tab="stable" data-added="2026-05-23" data-profit="85581" data-rev="128263" data-dl="126304"><td>16</td><td class="game-cell">Royal Paiza Club</td><td class="pub-cell">Limingroyal</td><td>2026-05-23</td><td>$86K</td><td>$128K</td><td>126K</td><td>➡️ +7%</td><td class="check-cell"><input type="checkbox" data-game="Royal Paiza Club" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Royal Paiza Club" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="The Godfather Game" data-tab="stable" data-added="2026-06-10" data-profit="84551" data-rev="129788" data-dl="10775"><td>17</td><td class="game-cell">The Godfather Game</td><td class="pub-cell">Hitcents</td><td>2026-06-10</td><td>$85K</td><td>$130K</td><td>11K</td><td>➡️ -3%</td><td class="check-cell"><input type="checkbox" data-game="The Godfather Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="The Godfather Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Fun Run 4 - Multiplayer Race" data-tab="stable" data-added="2026-05-23" data-profit="82411" data-rev="121749" data-dl="187111"><td>18</td><td class="game-cell">Fun Run 4 - Multiplayer Race</td><td class="pub-cell">dirtyBit</td><td>2026-05-23</td><td>$82K</td><td>$122K</td><td>187K</td><td>➡️ +7%</td><td class="check-cell"><input type="checkbox" data-game="Fun Run 4 - Multiplayer Race" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Fun Run 4 - Multiplayer Race" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Lords &amp; Knights - Mobile Kings" data-tab="stable" data-added="2026-06-10" data-profit="80545" data-rev="123909" data-dl="260"><td>19</td><td class="game-cell">Lords &amp; Knights - Mobile Kings</td><td class="pub-cell">XYRALITY</td><td>2026-06-10</td><td>$81K</td><td>$124K</td><td>260</td><td>➡️ +5%</td><td class="check-cell"><input type="checkbox" data-game="Lords &amp; Knights - Mobile Kings" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Lords &amp; Knights - Mobile Kings" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Highway Racer Pro" data-tab="stable" data-added="2026-05-09" data-profit="80192" data-rev="137019" data-dl="1603830"><td>20</td><td class="game-cell">Highway Racer Pro 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Spektra Games</td><td>2026-05-09</td><td>$80K</td><td>$137K</td><td>1.6M</td><td>➡️ -3%</td><td class="check-cell"><input type="checkbox" data-game="Highway Racer Pro" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Highway Racer Pro" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="RioRise－Jogo Simulador De Vida" data-tab="stable" data-added="2026-06-10" data-profit="78425" data-rev="80198" data-dl="1568492"><td>21</td><td class="game-cell">RioRise－Jogo Simulador De Vida 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Novabits Games</td><td>2026-06-10</td><td>$78K</td><td>$80K</td><td>1.6M</td><td>➡️ +10%</td><td class="check-cell"><input type="checkbox" data-game="RioRise－Jogo Simulador De Vida" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="RioRise－Jogo Simulador De Vida" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Makeup Beauty - Makeup Game" data-tab="stable" data-added="2026-06-10" data-profit="77899" data-rev="3886" data-dl="1557985"><td>22</td><td class="game-cell">Makeup Beauty - Makeup Game 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Gloryway Puzzle</td><td>2026-06-10</td><td>$78K</td><td>$4K</td><td>1.6M</td><td>➡️ -2%</td><td class="check-cell"><input type="checkbox" data-game="Makeup Beauty - Makeup Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Makeup Beauty - Makeup Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="锚点降临-近未来科幻RPG" data-tab="stable" data-added="2026-05-12" data-profit="73858" data-rev="111610" data-dl="74965"><td>23</td><td class="game-cell">锚点降临-近未来科幻RPG</td><td class="pub-cell">雷焰游戏</td><td>2026-05-12</td><td>$74K</td><td>$112K</td><td>75K</td><td>➡️ -0%</td><td class="check-cell"><input type="checkbox" data-game="锚点降临-近未来科幻RPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="锚点降临-近未来科幻RPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="TokyoCatch Claw Machine" data-tab="stable" data-added="2026-06-10" data-profit="72753" data-rev="111699" data-dl="8463"><td>24</td><td class="game-cell">TokyoCatch Claw Machine</td><td class="pub-cell">ICHIGO</td><td>2026-06-10</td><td>$73K</td><td>$112K</td><td>8K</td><td>➡️ -0%</td><td class="check-cell"><input type="checkbox" data-game="TokyoCatch Claw Machine" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="TokyoCatch Claw Machine" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Belote &amp; Coinche, jeu en ligne" data-tab="stable" data-added="2026-06-10" data-profit="72137" data-rev="110508" data-dl="17505"><td>25</td><td class="game-cell">Belote &amp; Coinche, jeu en ligne</td><td class="pub-cell">WhatWapp Entertainment</td><td>2026-06-10</td><td>$72K</td><td>$111K</td><td>18K</td><td>➡️ -8%</td><td class="check-cell"><input type="checkbox" data-game="Belote &amp; Coinche, jeu en ligne" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Belote &amp; Coinche, jeu en ligne" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Warhammer Combat Cards - 40K" data-tab="stable" data-added="2026-05-09" data-profit="68382" data-rev="104732" data-dl="17510"><td>26</td><td class="game-cell">Warhammer Combat Cards - 40K</td><td class="pub-cell">flaregames</td><td>2026-05-09</td><td>$68K</td><td>$105K</td><td>18K</td><td>➡️ +10%</td><td class="check-cell"><input type="checkbox" data-game="Warhammer Combat Cards - 40K" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Warhammer Combat Cards - 40K" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Call of Spartan" data-tab="stable" data-added="2026-05-12" data-profit="67631" data-rev="98115" data-dl="220395"><td>27</td><td class="game-cell">Call of Spartan</td><td class="pub-cell">Wang Xin</td><td>2026-05-12</td><td>$68K</td><td>$98K</td><td>220K</td><td>➡️ -4%</td><td class="check-cell"><input type="checkbox" data-game="Call of Spartan" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Call of Spartan" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Fruit Diary - Merge &amp; Match 3" data-tab="stable" data-added="2026-05-12" data-profit="66463" data-rev="96403" data-dl="217211"><td>28</td><td class="game-cell">Fruit Diary - Merge &amp; Match 3</td><td class="pub-cell">PUZZLEJOY</td><td>2026-05-12</td><td>$66K</td><td>$96K</td><td>217K</td><td>➡️ -7%</td><td class="check-cell"><input type="checkbox" data-game="Fruit Diary - Merge &amp; Match 3" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Fruit Diary - Merge &amp; Match 3" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Beat Cats" data-tab="stable" data-added="2026-06-10" data-profit="62822" data-rev="5301" data-dl="1256430"><td>29</td><td class="game-cell">Beat Cats 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Samfen</td><td>2026-06-10</td><td>$63K</td><td>$5K</td><td>1.3M</td><td>➡️ -3%</td><td class="check-cell"><input type="checkbox" data-game="Beat Cats" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Beat Cats" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="President: Simulator Game" data-tab="stable" data-added="2026-05-23" data-profit="62372" data-rev="91359" data-dl="170793"><td>30</td><td class="game-cell">President: Simulator Game</td><td class="pub-cell">Hidden Lake Games</td><td>2026-05-23</td><td>$62K</td><td>$91K</td><td>171K</td><td>➡️ -3%</td><td class="check-cell"><input type="checkbox" data-game="President: Simulator Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="President: Simulator Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Woodle Screw Jam: Nuts &amp; Bolts" data-tab="stable" data-added="2026-06-10" data-profit="60585" data-rev="110085" data-dl="1211701"><td>31</td><td class="game-cell">Woodle Screw Jam: Nuts &amp; Bolts 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">LifePulse Puzzle Game Studio</td><td>2026-06-10</td><td>$61K</td><td>$110K</td><td>1.2M</td><td>➡️ -1%</td><td class="check-cell"><input type="checkbox" data-game="Woodle Screw Jam: Nuts &amp; Bolts" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Woodle Screw Jam: Nuts &amp; Bolts" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Eyes Horror &amp; Coop Multiplayer" data-tab="stable" data-added="2026-06-10" data-profit="60447" data-rev="2809" data-dl="1208944"><td>32</td><td class="game-cell">Eyes Horror &amp; Coop Multiplayer 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Fearless Games</td><td>2026-06-10</td><td>$60K</td><td>$3K</td><td>1.2M</td><td>➡️ -7%</td><td class="check-cell"><input type="checkbox" data-game="Eyes Horror &amp; Coop Multiplayer" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Eyes Horror &amp; Coop Multiplayer" placeholder="…" oninput="saveNote(this)"></td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Declining ── -->
+<div class="tab-panel" id="tab-declining">
+  <input class="search-bar" placeholder="Search games…" oninput="filterTab('declining',this.value)">
+  <div class="tab-banner warn"><span class="banner-icon">⚠️</span><span>These games may already exist in Salesforce. Cross-check before outreach. <em>Salesforce dedup coming soon.</em></span></div>
+  <div class="tbl-wrap">
+    <table id="tbl-declining">
+      <thead><tr>
+        <th style="width:42px">#<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Game<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Publisher<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Added<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="profit">Est. Profit/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="rev">Revenue/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="dl">Downloads/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Rev Trend (90d)<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th style="width:64px">Checked?</th>
+        <th>Notes</th>
+      </tr></thead>
+      <tbody><tr class="iaa-row" data-name="Chess - Offline Board Game" data-tab="declining" data-added="2026-06-10" data-profit="149255" data-rev="18322" data-dl="2985094"><td>1</td><td class="game-cell">Chess - Offline Board Game 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">GamoVation</td><td>2026-06-10</td><td class='profit-red'>$149K</td><td>$18K</td><td>3.0M</td><td>📉 -19%</td><td class="check-cell"><input type="checkbox" data-game="Chess - Offline Board Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Chess - Offline Board Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Stickman GO" data-tab="declining" data-added="2026-05-12" data-profit="145490" data-rev="218147" data-dl="211120"><td>2</td><td class="game-cell">Stickman GO</td><td class="pub-cell">Moc Games</td><td>2026-05-12</td><td class='profit-red'>$145K</td><td>$218K</td><td>211K</td><td>📉 -11%</td><td class="check-cell"><input type="checkbox" data-game="Stickman GO" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Stickman GO" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Piano Kids - Music &amp; Songs" data-tab="declining" data-added="2026-06-10" data-profit="143596" data-rev="2336" data-dl="2871921"><td>3</td><td class="game-cell">Piano Kids - Music &amp; Songs 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Orange Studios Games</td><td>2026-06-10</td><td class='profit-red'>$144K</td><td>$2K</td><td>2.9M</td><td>📉 -20%</td><td class="check-cell"><input type="checkbox" data-game="Piano Kids - Music &amp; Songs" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Piano Kids - Music &amp; Songs" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Solar Smash" data-tab="declining" data-added="2026-06-10" data-profit="143258" data-rev="8683" data-dl="2865169"><td>4</td><td class="game-cell">Solar Smash 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Paradyme</td><td>2026-06-10</td><td class='profit-red'>$143K</td><td>$9K</td><td>2.9M</td><td>📉 -18%</td><td class="check-cell"><input type="checkbox" data-game="Solar Smash" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Solar Smash" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Screw Tap Jam™: Screw Sort 3D" data-tab="declining" data-added="2026-06-10" data-profit="140789" data-rev="215164" data-dl="53270"><td>5</td><td class="game-cell">Screw Tap Jam™: Screw Sort 3D</td><td class="pub-cell">Mind Crush</td><td>2026-06-10</td><td class='profit-red'>$141K</td><td>$215K</td><td>53K</td><td>📉 -29%</td><td class="check-cell"><input type="checkbox" data-game="Screw Tap Jam™: Screw Sort 3D" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Screw Tap Jam™: Screw Sort 3D" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Hero&#x27;s Land" data-tab="declining" data-added="2026-06-10" data-profit="132412" data-rev="202425" data-dl="47783"><td>6</td><td class="game-cell">Hero&#x27;s Land</td><td class="pub-cell">Xiamen Yuchangfeng Network Technology</td><td>2026-06-10</td><td class='profit-red'>$132K</td><td>$202K</td><td>48K</td><td>📉 -49%</td><td class="check-cell"><input type="checkbox" data-game="Hero&#x27;s Land" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Hero&#x27;s Land" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Hotel Hideaway: Avatar &amp; Chat" data-tab="declining" data-added="2026-05-23" data-profit="130133" data-rev="192422" data-dl="289068"><td>7</td><td class="game-cell">Hotel Hideaway: Avatar &amp; Chat</td><td class="pub-cell">Sulake</td><td>2026-05-23</td><td class='profit-red'>$130K</td><td>$192K</td><td>289K</td><td>📉 -15%</td><td class="check-cell"><input type="checkbox" data-game="Hotel Hideaway: Avatar &amp; Chat" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Hotel Hideaway: Avatar &amp; Chat" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Drill &amp; Collect: idle mine dig" data-tab="declining" data-added="2026-06-10" data-profit="128750" data-rev="190386" data-dl="285701"><td>8</td><td class="game-cell">Drill &amp; Collect: idle mine dig</td><td class="pub-cell">Apps Mobile Games</td><td>2026-06-10</td><td class='profit-red'>$129K</td><td>$190K</td><td>286K</td><td>📉 -26%</td><td class="check-cell"><input type="checkbox" data-game="Drill &amp; Collect: idle mine dig" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Drill &amp; Collect: idle mine dig" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="AdVenture Communist" data-tab="declining" data-added="2026-05-09" data-profit="121980" data-rev="186902" data-dl="28209"><td>9</td><td class="game-cell">AdVenture Communist</td><td class="pub-cell">Hyper Hippo</td><td>2026-05-09</td><td class='profit-red'>$122K</td><td>$187K</td><td>28K</td><td>📉 -11%</td><td class="check-cell"><input type="checkbox" data-game="AdVenture Communist" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="AdVenture Communist" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Poker Game: World Poker Club" data-tab="declining" data-added="2026-05-23" data-profit="121239" data-rev="183682" data-dl="105496"><td>10</td><td class="game-cell">Poker Game: World Poker Club</td><td class="pub-cell">Crazy Panda</td><td>2026-05-23</td><td class='profit-red'>$121K</td><td>$184K</td><td>105K</td><td>📉 -21%</td><td class="check-cell"><input type="checkbox" data-game="Poker Game: World Poker Club" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Poker Game: World Poker Club" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Coloring &amp; Learn" data-tab="declining" data-added="2026-06-10" data-profit="118077" data-rev="2627" data-dl="2361537"><td>11</td><td class="game-cell">Coloring &amp; Learn 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Orange Studios Games</td><td>2026-06-10</td><td class='profit-red'>$118K</td><td>$3K</td><td>2.4M</td><td>📉 -15%</td><td class="check-cell"><input type="checkbox" data-game="Coloring &amp; Learn" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Coloring &amp; Learn" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="FRAG Pro Shooter" data-tab="declining" data-added="2026-06-10" data-profit="114699" data-rev="89580" data-dl="2293980"><td>12</td><td class="game-cell">FRAG Pro Shooter 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Oh BiBi</td><td>2026-06-10</td><td class='profit-red'>$115K</td><td>$90K</td><td>2.3M</td><td>📉 -16%</td><td class="check-cell"><input type="checkbox" data-game="FRAG Pro Shooter" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="FRAG Pro Shooter" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Abyss: Chosen Heirs" data-tab="declining" data-added="2026-06-10" data-profit="113862" data-rev="174759" data-dl="15348"><td>13</td><td class="game-cell">Abyss: Chosen Heirs</td><td class="pub-cell">JiaSai</td><td>2026-06-10</td><td class='profit-red'>$114K</td><td>$175K</td><td>15K</td><td>📉 -23%</td><td class="check-cell"><input type="checkbox" data-game="Abyss: Chosen Heirs" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Abyss: Chosen Heirs" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Friends &amp; Dragons:Tactical RPG" data-tab="declining" data-added="2026-06-10" data-profit="113491" data-rev="174534" data-dl="2510"><td>14</td><td class="game-cell">Friends &amp; Dragons:Tactical RPG</td><td class="pub-cell">Playsome</td><td>2026-06-10</td><td class='profit-red'>$113K</td><td>$175K</td><td>3K</td><td>📉 -16%</td><td class="check-cell"><input type="checkbox" data-game="Friends &amp; Dragons:Tactical RPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Friends &amp; Dragons:Tactical RPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Mia World - Makeover Life" data-tab="declining" data-added="2026-06-10" data-profit="110641" data-rev="3304" data-dl="2212816"><td>15</td><td class="game-cell">Mia World - Makeover Life 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">31 Dress Up Games</td><td>2026-06-10</td><td class='profit-red'>$111K</td><td>$3K</td><td>2.2M</td><td>📉 -19%</td><td class="check-cell"><input type="checkbox" data-game="Mia World - Makeover Life" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Mia World - Makeover Life" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Crafting and Building" data-tab="declining" data-added="2026-06-10" data-profit="109057" data-rev="5157" data-dl="2181138"><td>16</td><td class="game-cell">Crafting and Building 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">GeneRe</td><td>2026-06-10</td><td class='profit-red'>$109K</td><td>$5K</td><td>2.2M</td><td>📉 -11%</td><td class="check-cell"><input type="checkbox" data-game="Crafting and Building" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Crafting and Building" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="World Tour Merge: Merging Game" data-tab="declining" data-added="2026-05-09" data-profit="107886" data-rev="165004" data-dl="36209"><td>17</td><td class="game-cell">World Tour Merge: Merging Game</td><td class="pub-cell">SoloBand Games</td><td>2026-05-09</td><td class='profit-red'>$108K</td><td>$165K</td><td>36K</td><td>📉 -16%</td><td class="check-cell"><input type="checkbox" data-game="World Tour Merge: Merging Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="World Tour Merge: Merging Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Game of Khans" data-tab="declining" data-added="2026-05-23" data-profit="107552" data-rev="163566" data-dl="70488"><td>18</td><td class="game-cell">Game of Khans</td><td class="pub-cell">Mechanist Games</td><td>2026-05-23</td><td class='profit-red'>$108K</td><td>$164K</td><td>70K</td><td>📉 -29%</td><td class="check-cell"><input type="checkbox" data-game="Game of Khans" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Game of Khans" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Magic Jigsaw Puzzles－Games HD" data-tab="declining" data-added="2026-05-23" data-profit="105178" data-rev="153322" data-dl="315355"><td>19</td><td class="game-cell">Magic Jigsaw Puzzles－Games HD</td><td class="pub-cell">ZiMAD</td><td>2026-05-23</td><td class='profit-red'>$105K</td><td>$153K</td><td>315K</td><td>📉 -12%</td><td class="check-cell"><input type="checkbox" data-game="Magic Jigsaw Puzzles－Games HD" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Magic Jigsaw Puzzles－Games HD" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Goddess: Primal Chaos - MMORPG" data-tab="declining" data-added="2026-06-10" data-profit="102834" data-rev="157824" data-dl="14192"><td>20</td><td class="game-cell">Goddess: Primal Chaos - MMORPG</td><td class="pub-cell">SKYWORK AI</td><td>2026-06-10</td><td class='profit-red'>$103K</td><td>$158K</td><td>14K</td><td>📉 -17%</td><td class="check-cell"><input type="checkbox" data-game="Goddess: Primal Chaos - MMORPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Goddess: Primal Chaos - MMORPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Screw Tap Jam™ - Craze Sort 3D" data-tab="declining" data-added="2026-06-10" data-profit="99237" data-rev="151468" data-dl="44694"><td>21</td><td class="game-cell">Screw Tap Jam™ - Craze Sort 3D</td><td class="pub-cell">CONATURE</td><td>2026-06-10</td><td class='profit-red'>$99K</td><td>$151K</td><td>45K</td><td>📉 -24%</td><td class="check-cell"><input type="checkbox" data-game="Screw Tap Jam™ - Craze Sort 3D" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Screw Tap Jam™ - Craze Sort 3D" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Fun Of Vegas - Casino Slots" data-tab="declining" data-added="2026-05-23" data-profit="97894" data-rev="146384" data-dl="156832"><td>22</td><td class="game-cell">Fun Of Vegas - Casino Slots</td><td class="pub-cell">TreasureTech</td><td>2026-05-23</td><td class='profit-red'>$98K</td><td>$146K</td><td>157K</td><td>📉 -16%</td><td class="check-cell"><input type="checkbox" data-game="Fun Of Vegas - Casino Slots" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Fun Of Vegas - Casino Slots" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Traffic Escape!" data-tab="declining" data-added="2026-06-10" data-profit="93345" data-rev="139679" data-dl="145918"><td>23</td><td class="game-cell">Traffic Escape!</td><td class="pub-cell">Fomo Games</td><td>2026-06-10</td><td class='profit-red'>$93K</td><td>$140K</td><td>146K</td><td>📉 -14%</td><td class="check-cell"><input type="checkbox" data-game="Traffic Escape!" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Traffic Escape!" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="【ポーカー】ｍHOLD&#x27;EM(エムホールデム)" data-tab="declining" data-added="2026-06-10" data-profit="88078" data-rev="135123" data-dl="14206"><td>24</td><td class="game-cell">【ポーカー】ｍHOLD&#x27;EM(エムホールデム)</td><td class="pub-cell">Sammy Corporation</td><td>2026-06-10</td><td class='profit-red'>$88K</td><td>$135K</td><td>14K</td><td>📉 -50%</td><td class="check-cell"><input type="checkbox" data-game="【ポーカー】ｍHOLD&#x27;EM(エムホールデム)" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="【ポーカー】ｍHOLD&#x27;EM(エムホールデム)" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Farming Simulator 23 Mobile" data-tab="declining" data-added="2026-05-23" data-profit="87072" data-rev="127092" data-dl="255008"><td>25</td><td class="game-cell">Farming Simulator 23 Mobile</td><td class="pub-cell">GIANTS Software</td><td>2026-05-23</td><td class='profit-red'>$87K</td><td>$127K</td><td>255K</td><td>📉 -20%</td><td class="check-cell"><input type="checkbox" data-game="Farming Simulator 23 Mobile" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Farming Simulator 23 Mobile" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Legend City" data-tab="declining" data-added="2026-05-09" data-profit="82640" data-rev="126955" data-dl="6825"><td>26</td><td class="game-cell">Legend City</td><td class="pub-cell">NEORIGIN</td><td>2026-05-09</td><td class='profit-red'>$83K</td><td>$127K</td><td>7K</td><td>📉 -19%</td><td class="check-cell"><input type="checkbox" data-game="Legend City" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Legend City" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Rodeo Stampede: Sky Zoo Safari" data-tab="declining" data-added="2026-05-23" data-profit="81891" data-rev="114983" data-dl="408688"><td>27</td><td class="game-cell">Rodeo Stampede: Sky Zoo Safari</td><td class="pub-cell">Featherweight Games</td><td>2026-05-23</td><td class='profit-red'>$82K</td><td>$115K</td><td>409K</td><td>📉 -17%</td><td class="check-cell"><input type="checkbox" data-game="Rodeo Stampede: Sky Zoo Safari" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Rodeo Stampede: Sky Zoo Safari" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Heroes &amp; Dragons: Tactical RPG" data-tab="declining" data-added="2026-06-10" data-profit="79079" data-rev="121525" data-dl="5026"><td>28</td><td class="game-cell">Heroes &amp; Dragons: Tactical RPG</td><td class="pub-cell">Banditos Studio</td><td>2026-06-10</td><td class='profit-red'>$79K</td><td>$122K</td><td>5K</td><td>📉 -53%</td><td class="check-cell"><input type="checkbox" data-game="Heroes &amp; Dragons: Tactical RPG" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Heroes &amp; Dragons: Tactical RPG" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Car Jam Solver: Traffic Jam" data-tab="declining" data-added="2026-06-10" data-profit="77567" data-rev="51498" data-dl="1551341"><td>29</td><td class="game-cell">Car Jam Solver: Traffic Jam 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Ladaneta Games</td><td>2026-06-10</td><td class='profit-red'>$78K</td><td>$51K</td><td>1.6M</td><td>📉 -29%</td><td class="check-cell"><input type="checkbox" data-game="Car Jam Solver: Traffic Jam" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Car Jam Solver: Traffic Jam" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Lady Popular: Dress Up Game" data-tab="declining" data-added="2026-05-12" data-profit="75086" data-rev="113121" data-dl="88976"><td>30</td><td class="game-cell">Lady Popular: Dress Up Game</td><td class="pub-cell">XS Software</td><td>2026-05-12</td><td class='profit-red'>$75K</td><td>$113K</td><td>89K</td><td>📉 -16%</td><td class="check-cell"><input type="checkbox" data-game="Lady Popular: Dress Up Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Lady Popular: Dress Up Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Sid Meier&#x27;s Civilization VI" data-tab="declining" data-added="2026-06-10" data-profit="73261" data-rev="111379" data-dl="49392"><td>31</td><td class="game-cell">Sid Meier&#x27;s Civilization VI</td><td class="pub-cell">Aspyr Media</td><td>2026-06-10</td><td class='profit-red'>$73K</td><td>$111K</td><td>49K</td><td>📉 -30%</td><td class="check-cell"><input type="checkbox" data-game="Sid Meier&#x27;s Civilization VI" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Sid Meier&#x27;s Civilization VI" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Tanghulu Master - Mukbang ASMR" data-tab="declining" data-added="2026-06-10" data-profit="71616" data-rev="22436" data-dl="1432322"><td>32</td><td class="game-cell">Tanghulu Master - Mukbang ASMR 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Whoyaho Corp.</td><td>2026-06-10</td><td class='profit-red'>$72K</td><td>$22K</td><td>1.4M</td><td>📉 -19%</td><td class="check-cell"><input type="checkbox" data-game="Tanghulu Master - Mukbang ASMR" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Tanghulu Master - Mukbang ASMR" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="AI Skin Maker &amp; Editor" data-tab="declining" data-added="2026-06-10" data-profit="68825" data-rev="102717" data-dl="117640"><td>33</td><td class="game-cell">AI Skin Maker &amp; Editor</td><td class="pub-cell">STAVRIO</td><td>2026-06-10</td><td class='profit-red'>$69K</td><td>$103K</td><td>118K</td><td>📉 -26%</td><td class="check-cell"><input type="checkbox" data-game="AI Skin Maker &amp; Editor" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="AI Skin Maker &amp; Editor" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Moto X3M Bike Race Game" data-tab="declining" data-added="2026-06-10" data-profit="68420" data-rev="3622" data-dl="1368401"><td>34</td><td class="game-cell">Moto X3M Bike Race Game 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Ace Viral</td><td>2026-06-10</td><td class='profit-red'>$68K</td><td>$4K</td><td>1.4M</td><td>📉 -12%</td><td class="check-cell"><input type="checkbox" data-game="Moto X3M Bike Race Game" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Moto X3M Bike Race Game" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="WWE Mayhem" data-tab="declining" data-added="2026-05-12" data-profit="64790" data-rev="88636" data-dl="410100"><td>35</td><td class="game-cell">WWE Mayhem</td><td class="pub-cell">Reliance Games</td><td>2026-05-12</td><td class='profit-red'>$65K</td><td>$89K</td><td>410K</td><td>📉 -13%</td><td class="check-cell"><input type="checkbox" data-game="WWE Mayhem" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="WWE Mayhem" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Tamagoo: Buddy Slime Pet Games" data-tab="declining" data-added="2026-05-12" data-profit="64757" data-rev="90962" data-dl="321833"><td>36</td><td class="game-cell">Tamagoo: Buddy Slime Pet Games</td><td class="pub-cell">Vexuse</td><td>2026-05-12</td><td class='profit-red'>$65K</td><td>$91K</td><td>322K</td><td>📉 -14%</td><td class="check-cell"><input type="checkbox" data-game="Tamagoo: Buddy Slime Pet Games" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Tamagoo: Buddy Slime Pet Games" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="" data-name="Into the Dead 2" data-tab="declining" data-added="2026-05-12" data-profit="62949" data-rev="87750" data-dl="337797"><td>37</td><td class="game-cell">Into the Dead 2</td><td class="pub-cell">Prodigy Design</td><td>2026-05-12</td><td class='profit-red'>$63K</td><td>$88K</td><td>338K</td><td>📉 -14%</td><td class="check-cell"><input type="checkbox" data-game="Into the Dead 2" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Into the Dead 2" placeholder="…" oninput="saveNote(this)"></td></tr>
+<tr class="iaa-row" data-name="Sandbox In Space" data-tab="declining" data-added="2026-06-10" data-profit="61858" data-rev="6630" data-dl="1237156"><td>38</td><td class="game-cell">Sandbox In Space 🎯 <span class="iaa-warn" title="IAA estimate — verify manually before presenting">⚠️</span></td><td class="pub-cell">Hookah Games</td><td>2026-06-10</td><td class='profit-red'>$62K</td><td>$7K</td><td>1.2M</td><td>📉 -33%</td><td class="check-cell"><input type="checkbox" data-game="Sandbox In Space" onchange="saveCheck(this)"></td><td class="notes-cell"><input type="text" class="notes-input" data-game="Sandbox In Space" placeholder="…" oninput="saveNote(this)"></td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Returning ── -->
+<div class="tab-panel" id="tab-returning">
+  <input class="search-bar" placeholder="Search games…" oninput="filterTab('returning',this.value)">
+  <div class="tab-banner warn"><span class="banner-icon">⚠️</span><span>These games may already exist in Salesforce. Cross-check before outreach. <em>Salesforce dedup coming soon.</em></span></div>
+  <div class="tbl-wrap">
+    <table id="tbl-returning">
+      <thead><tr>
+        <th style="width:42px">#<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Game<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Publisher<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Added<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="profit">Est. Profit/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="rev">Revenue/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th data-col="dl">Downloads/mo<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th>Rev Trend (90d)<i class="sort-icon"></i><div class="resize-handle"></div></th>
+        <th style="width:64px">Checked?</th>
+        <th>Notes</th>
+      </tr></thead>
+      <tbody><tr><td colspan="10" class="empty">No returning games yet.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ── Theme ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.dataset.theme === 'dark';
+  html.dataset.theme = dark ? 'light' : 'dark';
+  document.getElementById('theme-btn').textContent = dark ? '🌙' : '☀️';
+  localStorage.setItem('glf_theme', html.dataset.theme);
+}
+(function() {
+  const t = localStorage.getItem('glf_theme');
+  if (t) {
+    document.documentElement.dataset.theme = t;
+    document.getElementById('theme-btn').textContent = t === 'dark' ? '☀️' : '🌙';
+  }
+})();
+
+// ── Tabs ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Search / filter ──
+function filterTab(tabName, query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('#tbl-' + tabName + ' tbody tr').forEach(row => {
+    const name = (row.dataset.name || '').toLowerCase();
+    const pub  = (row.querySelector('.game-cell')?.title || '').toLowerCase();
+    row.style.display = (!q || name.includes(q) || pub.includes(q)) ? '' : 'none';
+  });
+}
+
+// ── localStorage — checks ──
+function saveCheck(cb) {
+  localStorage.setItem('glf_check_' + cb.dataset.game, cb.checked ? '1' : '');
+  updateReviewedCount();
+}
+function saveNote(inp) {
+  localStorage.setItem('glf_note_' + inp.dataset.game, inp.value);
+  updateReviewedCount();
+}
+function restoreState() {
+  document.querySelectorAll('input[type=checkbox][data-game]').forEach(cb => {
+    const v = localStorage.getItem('glf_check_' + cb.dataset.game);
+    if (v === '1') cb.checked = true;
+  });
+  document.querySelectorAll('.notes-input[data-game]').forEach(inp => {
+    const v = localStorage.getItem('glf_note_' + inp.dataset.game);
+    if (v) inp.value = v;
+  });
+  updateReviewedCount();
+}
+function updateReviewedCount() {
+  const checked   = document.querySelectorAll('input[type=checkbox][data-game]:checked').length;
+  const total     = document.querySelectorAll('input[type=checkbox][data-game]').length;
+  const withNotes = Array.from(document.querySelectorAll('.notes-input[data-game]'))
+                         .filter(el => el.value.trim() !== '').length;
+  document.getElementById('reviewed-count').textContent = checked;
+  document.getElementById('reviewed-pct').textContent =
+    total ? Math.round(checked / total * 100) + '%' : '0%';
+  document.getElementById('notes-count').textContent = withNotes;
+}
+
+// ── Column sort ──
+(function() {
+  const sortState = {};
+  document.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', function(e) {
+      if (e.target.classList.contains('resize-handle')) return;
+      const col  = th.dataset.col;
+      const tbl  = th.closest('table');
+      const tbody = tbl.querySelector('tbody');
+      const key  = tbl.id + '_' + col;
+      const asc  = sortState[key] !== true;
+      sortState[key] = asc;
+
+      // Update sort icons
+      tbl.querySelectorAll('th').forEach(t => {
+        t.classList.remove('sorted-asc','sorted-desc');
+      });
+      th.classList.add(asc ? 'sorted-asc' : 'sorted-desc');
+
+      const rows = Array.from(tbody.querySelectorAll('tr[data-name]'));
+      rows.sort((a, b) => {
+        const av = parseFloat(a.dataset[col] || 0);
+        const bv = parseFloat(b.dataset[col] || 0);
+        return asc ? av - bv : bv - av;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+
+  // Also sort by game name (text) for non-numeric th
+  document.querySelectorAll('th:not([data-col])').forEach(th => {
+    if (th.querySelector('.resize-handle') === null) return;
+    th.addEventListener('click', function(e) {
+      if (e.target.classList.contains('resize-handle')) return;
+      const tbl   = th.closest('table');
+      const tbody = tbl.querySelector('tbody');
+      const idx   = Array.from(th.parentNode.children).indexOf(th);
+      const key   = tbl.id + '_col' + idx;
+      const asc   = sortState[key] !== true;
+      sortState[key] = asc;
+      tbl.querySelectorAll('th').forEach(t => t.classList.remove('sorted-asc','sorted-desc'));
+      th.classList.add(asc ? 'sorted-asc' : 'sorted-desc');
+      const rows = Array.from(tbody.querySelectorAll('tr[data-name]'));
+      rows.sort((a, b) => {
+        const av = a.cells[idx]?.textContent.trim() || '';
+        const bv = b.cells[idx]?.textContent.trim() || '';
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+})();
+
+// ── Column resize ──
+(function() {
+  document.querySelectorAll('.resize-handle').forEach(handle => {
+    let startX, startW, th;
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      th = handle.parentElement;
+      startX = e.pageX;
+      startW = th.offsetWidth;
+      handle.classList.add('active');
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+    function onMove(e) {
+      th.style.width = Math.max(60, startW + (e.pageX - startX)) + 'px';
+    }
+    function onUp() {
+      handle.classList.remove('active');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+  });
+})();
+
+// ── Toast ──
+function showToast(msg, duration=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── EXECUTE ──
+function onExecute() {
+  showToast('⚡ Sensor Tower API not connected yet — coming soon', 3500);
+}
+
+// ── UPLOAD panel ──
+function toggleUpload() {
+  const panel = document.getElementById('upload-panel');
+  panel.classList.toggle('open');
+}
+// Close panel if clicking outside
+document.addEventListener('click', e => {
+  const panel = document.getElementById('upload-panel');
+  const btn   = document.getElementById('upload-btn');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) {
+    panel.classList.remove('open');
+  }
+});
+
+// ── Drag & drop ──
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-drop').classList.add('drag-over');
+}
+function onDragLeave(e) {
+  document.getElementById('upload-drop').classList.remove('drag-over');
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-drop').classList.remove('drag-over');
+  uploadFiles(e.dataTransfer.files);
+}
+function onFilePick(files) {
+  uploadFiles(files);
+}
+
+// ── Upload & refresh ──
+async function uploadFiles(files) {
+  if (!files || files.length === 0) return;
+  const status  = document.getElementById('upload-status');
+  const preview = document.getElementById('preview-check')?.checked || false;
+  status.textContent = preview ? 'Running preview...' : 'Uploading...';
+
+  const form = new FormData();
+  for (const f of files) form.append('csvfiles', f, f.name);
+  if (preview) form.append('preview', 'true');
+
+  try {
+    const resp = await fetch('/upload', { method: 'POST', body: form });
+    const data = await resp.json();
+    if (data.ok) {
+      status.textContent = data.summary;
+      if (preview && data.redirect) {
+        showToast('Preview ready — opening in new tab', 3000);
+        window.open(data.redirect, '_blank');
+      } else {
+        showToast('Done! Reloading...', 2000);
+        setTimeout(() => location.reload(), 1800);
+      }
+    } else {
+      status.textContent = 'Error: ' + data.error;
+      showToast('Upload failed — see panel', 4000);
+    }
+  } catch(err) {
+    status.textContent = 'Could not reach local server. Is server.py running?';
+    showToast('Server not running — run: py server.py', 5000);
+  }
+}
+
+// ── Init ──
+restoreState();
+</script>
+</body>
+</html>

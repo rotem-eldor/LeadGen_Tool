@@ -5,7 +5,7 @@ Usage: python pipeline.py [--mode small|standard] input.csv
 """
 import argparse, csv, io, json, re, sys
 from datetime import date
-from html import escape
+from html import escape, unescape
 from pathlib import Path
 
 LEGACY_DATES_FILE  = "legacy_dates.json"
@@ -58,7 +58,8 @@ CALIBRATION_ANCHORS = {
 }
 
 PROFIT_RANGES = {"small": (60_000, 150_000), "standard": (150_000, 2_000_000)}
-OUTPUT_FILE = "output.html"
+OUTPUT_FILE         = "output.html"
+OUTPUT_FILE_PREVIEW = "output_preview.html"
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -163,6 +164,59 @@ def load_existing(path: str) -> tuple[set[str], set[str], dict[str, str]]:
 
     return all_names, returning_src, added_dates
 
+
+def load_existing_rows(path: str) -> list[dict]:
+    """
+    Parse every game row from an existing output.html so they can be carried
+    forward into the new output unchanged.  Returns a list of record dicts with
+    the same keys expected by build_rows().
+    """
+    p = Path(path)
+    if not p.exists():
+        return []
+    content = p.read_text(encoding="utf-8")
+
+    rows = []
+    # Each <tr> has: data-name, data-tab, data-added, data-profit, data-rev, data-dl
+    pattern = re.compile(
+        r'<tr[^>]+data-name="([^"]+)"[^>]+data-tab="([^"]+)"[^>]+data-added="([^"]*)"'
+        r'[^>]+data-profit="([^"]*)"[^>]+data-rev="([^"]*)"[^>]+data-dl="([^"]*)"[^>]*>'
+        r'(.*?)</tr>',
+        re.DOTALL
+    )
+    for m in pattern.finditer(content):
+        name_safe  = m.group(1)
+        tab        = m.group(2)
+        added      = m.group(3)
+        profit_s   = m.group(4)
+        rev_s      = m.group(5)
+        dl_s       = m.group(6)
+        cells_html = m.group(7)
+
+        # Publisher from pub-cell td
+        pub_m     = re.search(r'class="pub-cell"[^>]*>(.*?)</td>', cells_html, re.DOTALL)
+        publisher = unescape(re.sub(r'<[^>]+>', '', pub_m.group(1))).strip() if pub_m else ""
+
+        # Rev trend % from the trend cell (e.g. "📈 +15%")
+        trend_m = re.search(r'([+-]\d+)%', cells_html)
+        rev_pop = float(trend_m.group(1)) if trend_m else 0.0
+
+        # IAA flag from warning span
+        is_iaa = 'class="iaa-warn"' in cells_html
+
+        rows.append(dict(
+            name      = unescape(name_safe),
+            publisher = publisher,
+            dl_mo     = float(dl_s)     if dl_s     else 0.0,
+            rev_mo    = float(rev_s)    if rev_s    else 0.0,
+            profit    = float(profit_s) if profit_s else 0.0,
+            rev_pop   = rev_pop,
+            is_iaa    = is_iaa,
+            _tab      = tab,
+            _added    = added,
+        ))
+    return rows
+
 # ── Main pipeline ────────────────────────────────────────────────────────────
 
 def parse_csv_to_records(csv_path: str) -> dict[str, dict]:
@@ -174,9 +228,18 @@ def parse_csv_to_records(csv_path: str) -> dict[str, dict]:
         pub  = (row.get("Unified Publisher Name") or row.get("Publisher Name") or "").strip()
         if not name or not is_english(name):
             continue
-        dl_mo   = parse_num(row.get("Downloads (Absolute)", "")) / 3
-        rev_mo  = parse_num(row.get("Revenue (Absolute)", ""))   / 3
-        rev_pop = parse_num(row.get("Revenue (PoP Growth %)", "")) * 100
+        dl_mo  = parse_num(row.get("Downloads (Absolute)", "")) / 3
+        rev_mo = parse_num(row.get("Revenue (Absolute)", ""))   / 3
+
+        # Handle two Sensor Tower export formats:
+        #   "Revenue (PoP Growth %)" → decimal fraction (0.158) → multiply ×100
+        #   "Revenue (PoP Growth)"   → absolute $ change → derive % from revenue
+        if "Revenue (PoP Growth %)" in row:
+            rev_pop = parse_num(row["Revenue (PoP Growth %)"]) * 100
+        else:
+            pop_abs  = parse_num(row.get("Revenue (PoP Growth)", ""))
+            prev_rev = rev_mo * 3 - pop_abs   # previous 90-day revenue in $
+            rev_pop  = (pop_abs / prev_rev * 100) if prev_rev != 0 else 0
         profit, is_iaa = compute_profit(dl_mo, rev_mo)
         key = name.lower()
         if key not in seen or rev_mo > seen[key]["rev_mo"]:
@@ -190,7 +253,8 @@ def run(csv_paths: list[str], mode: str) -> None:
     profit_min, profit_max = PROFIT_RANGES[mode]
     run_date = date.today().strftime("%Y-%m-%d")
 
-    existing_names, returning_src, added_dates = load_existing(OUTPUT_FILE)
+    existing_names, returning_src, added_dates = load_existing(OUTPUT_FILE)  # always read from real list
+    existing_rows = load_existing_rows(OUTPUT_FILE)  # full row data for carry-forward
 
     # Merge anchor names from JSON into the hardcoded set (single source of truth)
     live_anchors = CALIBRATION_ANCHORS | load_anchor_names()
@@ -259,17 +323,29 @@ def run(csv_paths: list[str], mode: str) -> None:
         else:
             tabs[trend_cat(r["rev_pop"])].append(r)
 
+    # ── Carry forward existing games ──
+    # Games already in the HTML were skipped above (existing_names check).
+    # Add them back so the list always grows — never shrinks.
+    for r in existing_rows:
+        existing_tab = r.pop("_tab", "stable")
+        r.pop("_added", None)  # added date comes from added_dates dict via build_rows
+        if existing_tab in tabs:
+            tabs[existing_tab].append(r)
+
     for tab_list in tabs.values():
         tab_list.sort(key=lambda x: x["profit"], reverse=True)
 
     html = build_html(tabs, run_date, mode, added_dates)
-    Path(OUTPUT_FILE).write_text(html, encoding="utf-8")
+    out_file = OUTPUT_FILE_PREVIEW if getattr(run, "_preview", False) else OUTPUT_FILE
+    Path(out_file).write_text(html, encoding="utf-8")
 
-    total = sum(len(v) for v in tabs.values())
-    cross = sum(1 for r in filtered if source_count.get(r["name"].lower(), 1) > 1
-                and normalize(r["name"]) not in existing_names)
-    print(f"OK  {OUTPUT_FILE}  --  {total} leads  "
-          f"({len(tabs['growing'])} growing  |  {len(tabs['stable'])} stable  |  "
+    total     = sum(len(v) for v in tabs.values())
+    new_count = sum(1 for r in filtered if normalize(r["name"]) not in existing_names)
+    cross     = sum(1 for r in filtered if source_count.get(r["name"].lower(), 1) > 1
+                    and normalize(r["name"]) not in existing_names)
+    print(f"OK  {out_file}  --  {total} leads total  "
+          f"({new_count} new this run  |  {len(existing_rows)} carried forward  |  "
+          f"{len(tabs['growing'])} growing  |  {len(tabs['stable'])} stable  |  "
           f"{len(tabs['declining'])} declining  |  {len(tabs['returning'])} returning"
           f"  [{cross} cross-platform])")
 
@@ -531,6 +607,10 @@ tr:hover td {{ background: var(--hover); }}
 <div class="top-right">
   <button id="execute-btn" class="action-btn" onclick="onExecute()">⚡ EXECUTE</button>
   <button id="upload-btn"  class="action-btn" onclick="toggleUpload()">⬆ UPLOAD</button>
+  <button id="export-btn" class="action-btn" onclick="exportSaves()" title="Export checkmarks &amp; notes to a file" style="background:#6f42c1">💾 Export</button>
+  <label id="import-btn" class="action-btn" style="background:#6f42c1;cursor:pointer" title="Import checkmarks &amp; notes from a file">
+    📥 Import<input type="file" accept=".json" style="display:none" onchange="importSaves(this)">
+  </label>
   <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light">🌙</button>
 </div>
 
@@ -544,6 +624,10 @@ tr:hover td {{ background: var(--hover); }}
            style="display:none" onchange="onFilePick(this.files)">
   </div>
   <div id="upload-hint">Last 90 days &nbsp;·&nbsp; Games &nbsp;·&nbsp; WW &nbsp;·&nbsp; Both stores</div>
+  <label id="preview-label" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer"
+         title="Writes to output_preview.html — your real list stays untouched">
+    <input type="checkbox" id="preview-check"> Preview only (don&#39;t update the list)
+  </label>
   <div id="upload-status"></div>
 </div>
 
@@ -855,19 +939,26 @@ function onFilePick(files) {{
 // ── Upload & refresh ──
 async function uploadFiles(files) {{
   if (!files || files.length === 0) return;
-  const status = document.getElementById('upload-status');
-  status.textContent = 'Uploading...';
+  const status  = document.getElementById('upload-status');
+  const preview = document.getElementById('preview-check')?.checked || false;
+  status.textContent = preview ? 'Running preview...' : 'Uploading...';
 
   const form = new FormData();
   for (const f of files) form.append('csvfiles', f, f.name);
+  if (preview) form.append('preview', 'true');
 
   try {{
     const resp = await fetch('/upload', {{ method: 'POST', body: form }});
     const data = await resp.json();
     if (data.ok) {{
       status.textContent = data.summary;
-      showToast('Done! Reloading...', 2000);
-      setTimeout(() => location.reload(), 1800);
+      if (preview && data.redirect) {{
+        showToast('Preview ready — opening in new tab', 3000);
+        window.open(data.redirect, '_blank');
+      }} else {{
+        showToast('Done! Reloading...', 2000);
+        setTimeout(() => location.reload(), 1800);
+      }}
     }} else {{
       status.textContent = 'Error: ' + data.error;
       showToast('Upload failed — see panel', 4000);
@@ -876,6 +967,43 @@ async function uploadFiles(files) {{
     status.textContent = 'Could not reach local server. Is server.py running?';
     showToast('Server not running — run: py server.py', 5000);
   }}
+}}
+
+// ── Export / Import saves ──
+function exportSaves() {{
+  const data = {{}};
+  for (let i = 0; i < localStorage.length; i++) {{
+    const key = localStorage.key(i);
+    if (key.startsWith('glf_')) data[key] = localStorage.getItem(key);
+  }}
+  const count = Object.keys(data).length;
+  if (count === 0) {{ showToast('Nothing to export — no checkmarks or notes saved', 3000); return; }}
+  const blob = new Blob([JSON.stringify(data, null, 2)], {{ type: 'application/json' }});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'glf_saves.json';
+  a.click();
+  showToast(`Exported ${{count}} saved items`, 3000);
+}}
+function importSaves(input) {{
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {{
+    try {{
+      const data = JSON.parse(e.target.result);
+      let count = 0;
+      for (const [key, val] of Object.entries(data)) {{
+        if (key.startsWith('glf_')) {{ localStorage.setItem(key, val); count++; }}
+      }}
+      showToast(`Imported ${{count}} saved items — reloading…`, 2000);
+      setTimeout(() => location.reload(), 1800);
+    }} catch(err) {{
+      showToast('Import failed — invalid file', 4000);
+    }}
+  }};
+  reader.readAsText(file);
+  input.value = '';
 }}
 
 // ── Init ──
@@ -891,12 +1019,15 @@ def main() -> None:
     parser.add_argument("csv", nargs="+", help="One or more Sensor Tower CSV exports (UTF-16, tab-separated)")
     parser.add_argument("--mode", choices=["small", "standard"], default="small",
                         help="small=$60K-$150K  standard=$150K-$2M  (default: small)")
+    parser.add_argument("--preview", action="store_true",
+                        help="Write to output_preview.html instead of output.html (safe for demos)")
     args = parser.parse_args()
 
     for p in args.csv:
         if not Path(p).exists():
             sys.exit(f"Error: file not found -- {p}")
 
+    run._preview = args.preview
     run(args.csv, args.mode)
 
 if __name__ == "__main__":
