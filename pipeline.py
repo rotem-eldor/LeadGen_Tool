@@ -607,10 +607,6 @@ tr:hover td {{ background: var(--hover); }}
 <div class="top-right">
   <button id="execute-btn" class="action-btn" onclick="onExecute()">⚡ EXECUTE</button>
   <button id="upload-btn"  class="action-btn" onclick="toggleUpload()">⬆ UPLOAD</button>
-  <button id="export-btn" class="action-btn" onclick="exportSaves()" title="Export checkmarks &amp; notes to a file" style="background:#6f42c1">💾 Export</button>
-  <label id="import-btn" class="action-btn" style="background:#6f42c1;cursor:pointer" title="Import checkmarks &amp; notes from a file">
-    📥 Import<input type="file" accept=".json" style="display:none" onchange="importSaves(this)">
-  </label>
   <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light">🌙</button>
 </div>
 
@@ -788,12 +784,23 @@ function filterTab(tabName, query) {{
 function saveCheck(cb) {{
   localStorage.setItem('glf_check_' + cb.dataset.game, cb.checked ? '1' : '');
   updateReviewedCount();
+  syncToServer();
 }}
 function saveNote(inp) {{
   localStorage.setItem('glf_note_' + inp.dataset.game, inp.value);
   updateReviewedCount();
+  syncToServer();
 }}
-function restoreState() {{
+async function restoreState() {{
+  try {{
+    const resp = await fetch('/games_state.json');
+    if (resp.ok) {{
+      const data = await resp.json();
+      for (const [key, val] of Object.entries(data)) {{
+        if (key.startsWith('glf_')) localStorage.setItem(key, val);
+      }}
+    }}
+  }} catch(e) {{}}
   document.querySelectorAll('input[type=checkbox][data-game]').forEach(cb => {{
     const v = localStorage.getItem('glf_check_' + cb.dataset.game);
     if (v === '1') cb.checked = true;
@@ -969,41 +976,24 @@ async function uploadFiles(files) {{
   }}
 }}
 
-// ── Export / Import saves ──
-function exportSaves() {{
-  const data = {{}};
-  for (let i = 0; i < localStorage.length; i++) {{
-    const key = localStorage.key(i);
-    if (key.startsWith('glf_')) data[key] = localStorage.getItem(key);
-  }}
-  const count = Object.keys(data).length;
-  if (count === 0) {{ showToast('Nothing to export — no checkmarks or notes saved', 3000); return; }}
-  const blob = new Blob([JSON.stringify(data, null, 2)], {{ type: 'application/json' }});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'glf_saves.json';
-  a.click();
-  showToast(`Exported ${{count}} saved items`, 3000);
-}}
-function importSaves(input) {{
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {{
-    try {{
-      const data = JSON.parse(e.target.result);
-      let count = 0;
-      for (const [key, val] of Object.entries(data)) {{
-        if (key.startsWith('glf_')) {{ localStorage.setItem(key, val); count++; }}
+// ── Server sync (saves checkmarks+notes to games_state.json for git) ──
+let _syncTimer = null;
+function syncToServer() {{
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {{
+    const data = {{}};
+    for (let i = 0; i < localStorage.length; i++) {{
+      const key = localStorage.key(i);
+      if (key.startsWith('glf_check_') || key.startsWith('glf_note_')) {{
+        data[key] = localStorage.getItem(key);
       }}
-      showToast(`Imported ${{count}} saved items — reloading…`, 2000);
-      setTimeout(() => location.reload(), 1800);
-    }} catch(err) {{
-      showToast('Import failed — invalid file', 4000);
     }}
-  }};
-  reader.readAsText(file);
-  input.value = '';
+    fetch('/save-state', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body: JSON.stringify(data)
+    }}).catch(() => {{}});
+  }}, 800);
 }}
 
 // ── Init ──

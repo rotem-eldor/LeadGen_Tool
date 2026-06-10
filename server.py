@@ -10,8 +10,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-PIPELINE = Path(__file__).parent / "pipeline.py"
-OUTPUT   = Path(__file__).parent / "output.html"
+PIPELINE    = Path(__file__).parent / "pipeline.py"
+OUTPUT      = Path(__file__).parent / "output.html"
+STATE_FILE  = Path(__file__).parent / "games_state.json"
 
 MODE = "small"   # overridden by --mode flag
 
@@ -63,10 +64,24 @@ class Handler(BaseHTTPRequestHandler):
             self._serve_file(OUTPUT, "text/html; charset=utf-8")
         elif parsed.path == "/output_preview.html":
             self._serve_file(OUTPUT.parent / "output_preview.html", "text/html; charset=utf-8")
+        elif parsed.path == "/games_state.json":
+            self._serve_file(STATE_FILE, "application/json; charset=utf-8")
         else:
             self._respond(404, "text/plain", b"Not found")
 
     def do_POST(self):
+        if self.path == "/save-state":
+            length = int(self.headers.get("Content-Length", 0))
+            body   = self.rfile.read(length)
+            try:
+                data = json.loads(body)
+                STATE_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+                self._respond(200, "application/json", b'{"ok":true}')
+            except Exception as e:
+                self._respond(500, "application/json",
+                              json.dumps({"ok": False, "error": str(e)}).encode())
+            return
+
         if self.path != "/upload":
             self._respond(404, "text/plain", b"Not found")
             return
